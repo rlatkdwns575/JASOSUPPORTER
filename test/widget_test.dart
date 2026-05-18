@@ -14,6 +14,7 @@ void main() {
     await tester.pumpWidget(const MissingApiKeyApp());
     await tester.pump();
 
-    expect(find.text('assets/.env에 GOOGLE_API_KEY가 없습니다.'), findsOneWidget);
+    expect(find.text('Gemini API 키가 필요합니다'), findsOneWidget);
+    expect(find.text('JasoSupporter 시작'), findsOneWidget);
   });
 }

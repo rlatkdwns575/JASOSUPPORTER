@@ -44,25 +44,80 @@ Future<void> main() async {
   runApp(const ChatGptApp());
 }
 
-class MissingApiKeyApp extends StatelessWidget {
+class MissingApiKeyApp extends StatefulWidget {
   const MissingApiKeyApp({super.key});
+
+  @override
+  State<MissingApiKeyApp> createState() => _MissingApiKeyAppState();
+}
+
+class _MissingApiKeyAppState extends State<MissingApiKeyApp> {
+  final TextEditingController _apiKeyController = TextEditingController();
+  String? _errorText;
+
+  @override
+  void dispose() {
+    _apiKeyController.dispose();
+    super.dispose();
+  }
+
+  void _startWithApiKey() {
+    final String apiKey = _apiKeyController.text.trim();
+    if (apiKey.isEmpty) {
+      setState(() {
+        _errorText = "Gemini API 키를 입력해 주세요.";
+      });
+      return;
+    }
+    GeminiService.initialize(apiKey);
+    runApp(const ChatGptApp());
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: "JasoSupporter",
       theme: AppTheme.light(),
-      home: const Scaffold(
+      home: Scaffold(
         body: Center(
           child: Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              "assets/.env에 GOOGLE_API_KEY가 없습니다.",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: AppColors.onSurface,
-                fontWeight: FontWeight.w700,
+            padding: const EdgeInsets.all(24),
+            child: AppCard(
+              backgroundColor: AppColors.surfaceContainerLowest,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 460),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SectionHeader(
+                      title: "Gemini API 키가 필요합니다",
+                      subtitle: "온라인 배포판에서는 API 키를 저장소에 포함하지 않습니다. 입력한 키는 현재 실행 중인 앱에서만 사용됩니다.",
+                      icon: Icons.vpn_key_outlined,
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _apiKeyController,
+                      obscureText: true,
+                      decoration: InputDecoration(
+                        labelText: "GOOGLE_API_KEY",
+                        errorText: _errorText,
+                      ),
+                      onSubmitted: (_) => _startWithApiKey(),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton.icon(
+                      onPressed: _startWithApiKey,
+                      icon: const Icon(Icons.play_arrow_rounded),
+                      label: const Text("JasoSupporter 시작"),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      "로컬 개발에서는 assets/.env를 둘 수 있지만, 공개 웹 배포에는 API 키를 커밋하지 마세요.",
+                      style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.onSurfaceVariant),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
