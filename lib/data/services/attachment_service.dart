@@ -7,10 +7,12 @@ class PickedAttachment {
   const PickedAttachment({
     required this.name,
     required this.bytes,
+    this.mimeType = 'application/octet-stream',
   });
 
   final String name;
   final Uint8List bytes;
+  final String mimeType;
 }
 
 class AttachmentPickResult {
@@ -73,7 +75,7 @@ class AttachmentService {
         continue;
       }
 
-      attachments.add(PickedAttachment(name: file.name, bytes: bytes));
+      attachments.add(PickedAttachment(name: file.name, bytes: bytes, mimeType: mimeType));
     }
 
     return AttachmentPickResult(
