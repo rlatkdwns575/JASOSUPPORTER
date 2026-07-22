@@ -1,0 +1,8 @@
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.29
+pydantic>=2.6
+pydantic-settings>=2.2
+sqlmodel>=0.0.16
+google-generativeai>=0.7
+pinecone>=5.0
+python-dotenv>=1.0
