@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
+import 'package:chatgptmini/app/app.dart';
 import 'package:chatgptmini/app_brand_mark.dart';
 import 'package:chatgptmini/app_colors.dart';
 import 'package:chatgptmini/assistant_prompts.dart';
-import 'package:chatgptmini/core/theme/app_theme.dart';
 import 'package:chatgptmini/core/widgets/app_components.dart';
 import 'package:chatgptmini/core/widgets/chat_widgets.dart';
 import 'package:chatgptmini/core/widgets/composer_widgets.dart';
@@ -25,6 +25,7 @@ import 'package:chatgptmini/master_resume_workspace.dart';
 import 'package:chatgptmini/model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:go_router/go_router.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,18 +35,20 @@ Future<void> main() async {
   } catch (_) {
     // .env가 없어도 기본 설정으로 진행한다.
   }
-  runApp(const ChatGptApp());
+  runApp(const JasoApp());
 }
 
 class ChatGptApp extends StatefulWidget {
-  const ChatGptApp({super.key});
+  const ChatGptApp({super.key, required this.location});
+
+  /// 현재 활성 라우트 경로. go_router의 ShellRoute가 주입한다.
+  final String location;
 
   @override
   State<ChatGptApp> createState() => _ChatGptAppState();
 }
 
 class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
-  AssistantMode _mode = AssistantMode.experienceSpec;
   final PromptBuilder _promptBuilder = const PromptBuilder();
   final AiService _aiService = HttpAiService();
   late final ChatFlowController _chatFlowController;
@@ -66,7 +69,6 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
   final TextEditingController _masterTargetJobController = TextEditingController();
 
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey<ScaffoldMessengerState> _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
   final TextEditingController controller = TextEditingController();
   final TextEditingController attachmentController = TextEditingController();
@@ -91,6 +93,29 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
 
   /// 자료·복붙 패널: false면 한 줄 입력 위주로 최소 높이.
   bool _attachmentPanelExpanded = false;
+
+  AssistantMode get _mode => _modeForLocation(widget.location);
+
+  static AssistantMode _modeForLocation(String location) {
+    if (location.startsWith('/master-resume')) {
+      return AssistantMode.masterResume;
+    }
+    if (location.startsWith('/portfolio')) {
+      return AssistantMode.portfolio;
+    }
+    return AssistantMode.experienceSpec;
+  }
+
+  static String _pathForMode(AssistantMode mode) {
+    switch (mode) {
+      case AssistantMode.experienceSpec:
+        return '/experience';
+      case AssistantMode.masterResume:
+        return '/master-resume';
+      case AssistantMode.portfolio:
+        return '/portfolio';
+    }
+  }
 
   ChatRoom get _room => _rooms[_mode]!;
 
@@ -193,7 +218,7 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
     if (!mounted) {
       return;
     }
-    _scaffoldMessengerKey.currentState?.showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
@@ -414,9 +439,7 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
   }
 
   void _useExperienceForEssay(Experience experience) {
-    setState(() {
-      _mode = AssistantMode.masterResume;
-    });
+    context.go('/master-resume');
     _snack("'${experience.title}' 카드를 마스터 자소서 화면에서 선택해 사용할 수 있습니다.");
   }
 
@@ -664,23 +687,18 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "JasoSupporter",
-      scaffoldMessengerKey: _scaffoldMessengerKey,
-      theme: AppTheme.light(),
-      home: Scaffold(
-        appBar: buildAppBar(),
-        backgroundColor: AppColors.scaffold,
-        body: SafeArea(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              buildModeBar(context),
-              Expanded(child: _buildMainWorkspace(context)),
-              buildAttachmentPanel(context),
-              buildTextField(context),
-            ],
-          ),
+    return Scaffold(
+      appBar: buildAppBar(),
+      backgroundColor: AppColors.scaffold,
+      body: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            buildModeBar(context),
+            Expanded(child: _buildMainWorkspace(context)),
+            buildAttachmentPanel(context),
+            buildTextField(context),
+          ],
         ),
       ),
     );
@@ -1015,14 +1033,7 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
           splashColor: AppColors.primary.withValues(alpha: 0.14),
           highlightColor: AppColors.primary.withValues(alpha: 0.08),
           hoverColor: AppColors.primary.withValues(alpha: 0.06),
-          onTap: isGenerating
-              ? null
-              : () {
-                  setState(() {
-                    _mode = mode;
-                  });
-                  _syncSendEnabled();
-                },
+          onTap: isGenerating ? null : () => context.go(_pathForMode(mode)),
           child: ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 46),
             child: Padding(

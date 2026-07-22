@@ -1,9 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:chatgptmini/main.dart';
+import 'package:chatgptmini/app/app.dart';
 
 void main() {
-  testWidgets('JasoSupporter app shell renders', (WidgetTester tester) async {
-    await tester.pumpWidget(const ChatGptApp());
+  testWidgets('JasoSupporter app shell renders at initial route', (WidgetTester tester) async {
+    await tester.pumpWidget(const JasoApp());
     await tester.pump();
 
     expect(find.text('JasoSupporter'), findsOneWidget);
