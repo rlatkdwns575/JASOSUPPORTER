@@ -7,11 +7,10 @@ import 'package:chatgptmini/core/theme/app_theme.dart';
 import 'package:chatgptmini/core/widgets/app_components.dart';
 import 'package:chatgptmini/core/widgets/chat_widgets.dart';
 import 'package:chatgptmini/core/widgets/composer_widgets.dart';
-import 'package:chatgptmini/data/local/json_career_repository.dart';
+import 'package:chatgptmini/data/remote/remote_career_repository.dart';
+import 'package:chatgptmini/data/services/ai_service.dart';
 import 'package:chatgptmini/data/services/attachment_service.dart';
-import 'package:chatgptmini/data/services/gemini_service.dart';
 import 'package:chatgptmini/data/services/prompt_builder.dart';
-import 'package:chatgptmini/domain/enums/experience_type.dart';
 import 'package:chatgptmini/domain/models/career_artifacts.dart';
 import 'package:chatgptmini/domain/models/experience.dart';
 import 'package:chatgptmini/domain/models/spec_item.dart';
@@ -29,102 +28,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  String? apiKey;
+  // API 키는 서버에서만 관리한다. .env는 API_BASE_URL 등 비민감 설정 용도로만 선택 로드한다.
   try {
     await dotenv.load(fileName: "assets/.env");
-    apiKey = dotenv.env["GOOGLE_API_KEY"]?.trim();
   } catch (_) {
-    apiKey = null;
+    // .env가 없어도 기본 설정으로 진행한다.
   }
-  if (apiKey == null || apiKey.isEmpty) {
-    runApp(const MissingApiKeyApp());
-    return;
-  }
-  GeminiService.initialize(apiKey);
   runApp(const ChatGptApp());
-}
-
-class MissingApiKeyApp extends StatefulWidget {
-  const MissingApiKeyApp({super.key});
-
-  @override
-  State<MissingApiKeyApp> createState() => _MissingApiKeyAppState();
-}
-
-class _MissingApiKeyAppState extends State<MissingApiKeyApp> {
-  final TextEditingController _apiKeyController = TextEditingController();
-  String? _errorText;
-
-  @override
-  void dispose() {
-    _apiKeyController.dispose();
-    super.dispose();
-  }
-
-  void _startWithApiKey() {
-    final String apiKey = _apiKeyController.text.trim();
-    if (apiKey.isEmpty) {
-      setState(() {
-        _errorText = "Gemini API 키를 입력해 주세요.";
-      });
-      return;
-    }
-    GeminiService.initialize(apiKey);
-    runApp(const ChatGptApp());
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: "JasoSupporter",
-      theme: AppTheme.light(),
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: AppCard(
-              backgroundColor: AppColors.surfaceContainerLowest,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 460),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SectionHeader(
-                      title: "Gemini API 키가 필요합니다",
-                      subtitle: "온라인 배포판에서는 API 키를 저장소에 포함하지 않습니다. 입력한 키는 현재 실행 중인 앱에서만 사용됩니다.",
-                      icon: Icons.vpn_key_outlined,
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _apiKeyController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: "GOOGLE_API_KEY",
-                        errorText: _errorText,
-                      ),
-                      onSubmitted: (_) => _startWithApiKey(),
-                    ),
-                    const SizedBox(height: 12),
-                    FilledButton.icon(
-                      onPressed: _startWithApiKey,
-                      icon: const Icon(Icons.play_arrow_rounded),
-                      label: const Text("JasoSupporter 시작"),
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      "로컬 개발에서는 assets/.env를 둘 수 있지만, 공개 웹 배포에는 API 키를 커밋하지 마세요.",
-                      style: TextStyle(fontSize: 12, height: 1.4, color: AppColors.onSurfaceVariant),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class ChatGptApp extends StatefulWidget {
@@ -137,10 +47,10 @@ class ChatGptApp extends StatefulWidget {
 class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
   AssistantMode _mode = AssistantMode.experienceSpec;
   final PromptBuilder _promptBuilder = const PromptBuilder();
-  final AiService _aiService = const GeminiService();
+  final AiService _aiService = HttpAiService();
   late final ChatFlowController _chatFlowController;
   final AttachmentService _attachmentService = const AttachmentService();
-  final JsonCareerRepository _careerRepository = const JsonCareerRepository();
+  final RemoteCareerRepository _careerRepository = RemoteCareerRepository();
 
   final Map<AssistantMode, ChatRoom> _rooms = {
     AssistantMode.experienceSpec: ChatRoom(chats: [], createdAt: DateTime.now()),
@@ -191,7 +101,6 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
     _masterTabController = TabController(length: 7, vsync: this);
     _masterQControllers = List.generate(6, (_) => TextEditingController());
     _chatFlowController = ChatFlowController(
-      promptBuilder: _promptBuilder,
       aiService: _aiService,
     );
 
@@ -331,39 +240,10 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
     return math.min(640, math.max(168, parentWidth - 24));
   }
 
-  String _experienceContextBlock() {
-    final List<ChatMessage> chats = _rooms[AssistantMode.experienceSpec]!.chats;
-    if (chats.isEmpty && _savedExperiences.isEmpty) {
-      return "";
-    }
-
-    final StringBuffer buffer = StringBuffer();
-    if (_savedExperiences.isNotEmpty) {
-      buffer.writeln(_experiencePromptBlock(_savedExperiences, "저장된 Experience 카드 — 다른 모드에서도 사실만 인용할 것"));
-      buffer.writeln();
-    }
-
-    if (chats.isNotEmpty) {
-      buffer.writeln("[경험·스펙에서 정리된 참고 데이터 — 다른 모드에서도 사실만 인용할 것]");
-    }
-    for (final chat in chats) {
-      final String role = chat.isMe ? "사용자" : "AI";
-      final String text = chat.text.trim();
-      if (text.isEmpty) {
-        continue;
-      }
-      buffer.writeln("$role: $text");
-    }
-
-    String result = buffer.toString().trim();
-    const int maxLen = 12000;
-    if (result.length > maxLen) {
-      result = result.substring(result.length - maxLen);
-    }
-    return result;
-  }
-
-  void _sendProgrammatic(String chatBubbleText) {
+  void _sendProgrammatic(
+    String chatBubbleText, {
+    List<String> selectedExperienceIds = const [],
+  }) {
     if (isGenerating) {
       return;
     }
@@ -374,7 +254,7 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
       attachmentText: attachmentController.text,
       attachments: _pickedBinary,
       targetJob: _masterTargetJobController.text,
-      experienceContext: _experienceContextBlock(),
+      selectedExperienceIds: selectedExperienceIds,
     );
     setState(() {
       _room.chats.add(turn.userMessage);
@@ -384,45 +264,11 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
     _startAssistantStream(turn);
   }
 
-  String _experiencePromptBlock(Iterable<Experience> experiences, String heading) {
-    final List<Experience> items = experiences.toList(growable: false);
-    if (items.isEmpty) {
-      return "";
-    }
-    final StringBuffer buffer = StringBuffer();
-    buffer.writeln("[$heading]");
-    for (final Experience experience in items) {
-      buffer.writeln("- id: ${experience.id}");
-      buffer.writeln("  제목: ${experience.title}");
-      buffer.writeln("  유형: ${experience.type.label}");
-      if (experience.period.displayText.isNotEmpty) {
-        buffer.writeln("  기간: ${experience.period.displayText}");
-      }
-      if (experience.organization.trim().isNotEmpty) {
-        buffer.writeln("  기관/소속: ${experience.organization.trim()}");
-      }
-      if (experience.role.trim().isNotEmpty) {
-        buffer.writeln("  역할/결과: ${experience.role.trim()}");
-      }
-      if (experience.action.trim().isNotEmpty) {
-        buffer.writeln("  내용: ${experience.action.trim()}");
-      }
-    }
-    return buffer.toString().trim();
-  }
-
-  String _selectedExperienceContextBlock(List<String> ids) {
-    final Set<String> selected = ids.toSet();
-    return _experiencePromptBlock(
-      _savedExperiences.where((Experience experience) => selected.contains(experience.id)),
-      "이 문항에 선택한 Experience 카드",
-    );
-  }
-
   void _requestMasterQuestionDraft(int index0Based, List<String> selectedExperienceIds) {
     final MasterQuestionCopy q = MasterQuestionCopy.all[index0Based];
     final String draft = _masterQControllers[index0Based].text.trim();
     final String job = _masterTargetJobController.text.trim();
+    // 선택 경험의 사실 주입은 서버 RAG가 selectedExperienceIds로 처리한다.
     _sendProgrammatic(
       _promptBuilder.masterQuestionDraftRequest(
         question: q,
@@ -430,8 +276,9 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
         userDraft: draft,
         targetJob: job,
         selectedExperienceIds: selectedExperienceIds,
-        selectedExperienceContext: _selectedExperienceContextBlock(selectedExperienceIds),
+        selectedExperienceContext: "",
       ),
+      selectedExperienceIds: selectedExperienceIds,
     );
   }
 
@@ -1321,7 +1168,6 @@ class _ChatGptAppState extends State<ChatGptApp> with TickerProviderStateMixin {
       attachmentText: attachmentController.text,
       attachments: _pickedBinary,
       targetJob: _masterTargetJobController.text,
-      experienceContext: _experienceContextBlock(),
     );
     if (turn == null) {
       return;

@@ -1,28 +1,37 @@
 import 'package:chatgptmini/assistant_prompts.dart';
+import 'package:chatgptmini/data/services/ai_service.dart';
 import 'package:chatgptmini/data/services/attachment_service.dart';
-import 'package:chatgptmini/data/services/gemini_service.dart';
-import 'package:chatgptmini/data/services/prompt_builder.dart';
 import 'package:chatgptmini/model.dart';
 
+/// 한 번의 사용자 요청에 필요한 구조화 데이터.
+///
+/// 프롬프트 조합과 RAG 컨텍스트 주입은 서버가 담당하므로, 클라이언트는
+/// 대화 맥락과 부가 정보만 전달한다.
 class ChatTurn {
   const ChatTurn({
     required this.userMessage,
-    required this.prompt,
+    required this.mode,
+    required this.history,
+    required this.attachmentText,
+    required this.targetJob,
+    required this.selectedExperienceIds,
     required this.attachments,
   });
 
   final ChatMessage userMessage;
-  final String prompt;
+  final AssistantMode mode;
+  final List<AiChatMessage> history;
+  final String attachmentText;
+  final String targetJob;
+  final List<String> selectedExperienceIds;
   final List<AiBinaryPart> attachments;
 }
 
 class ChatFlowController {
   const ChatFlowController({
-    required this.promptBuilder,
     required this.aiService,
   });
 
-  final PromptBuilder promptBuilder;
   final AiService aiService;
 
   ChatTurn? createUserTurn({
@@ -32,7 +41,7 @@ class ChatFlowController {
     required String attachmentText,
     required List<PickedAttachment> attachments,
     required String targetJob,
-    required String experienceContext,
+    List<String> selectedExperienceIds = const [],
   }) {
     final String main = mainText.trim();
     final String attachment = attachmentText.trim();
@@ -58,7 +67,7 @@ class ChatFlowController {
       attachmentText: attachmentText,
       attachments: attachments,
       targetJob: targetJob,
-      experienceContext: experienceContext,
+      selectedExperienceIds: selectedExperienceIds,
     );
   }
 
@@ -69,7 +78,7 @@ class ChatFlowController {
     required String attachmentText,
     required List<PickedAttachment> attachments,
     required String targetJob,
-    required String experienceContext,
+    List<String> selectedExperienceIds = const [],
   }) {
     return _createTurn(
       mode: mode,
@@ -78,15 +87,30 @@ class ChatFlowController {
       attachmentText: attachmentText,
       attachments: attachments,
       targetJob: targetJob,
-      experienceContext: experienceContext,
+      selectedExperienceIds: selectedExperienceIds,
     );
   }
 
   Stream<String> streamAssistantText(ChatTurn turn) {
-    return aiService.streamText(
-      prompt: turn.prompt,
+    return aiService.streamChat(
+      mode: modeKey(turn.mode),
+      messages: turn.history,
+      attachmentText: turn.attachmentText,
+      targetJob: turn.targetJob,
+      selectedExperienceIds: turn.selectedExperienceIds,
       attachments: turn.attachments,
     );
+  }
+
+  static String modeKey(AssistantMode mode) {
+    switch (mode) {
+      case AssistantMode.experienceSpec:
+        return 'experienceSpec';
+      case AssistantMode.masterResume:
+        return 'masterResume';
+      case AssistantMode.portfolio:
+        return 'portfolio';
+    }
   }
 
   ChatTurn _createTurn({
@@ -96,34 +120,33 @@ class ChatFlowController {
     required String attachmentText,
     required List<PickedAttachment> attachments,
     required String targetJob,
-    required String experienceContext,
+    required List<String> selectedExperienceIds,
   }) {
     final ChatMessage userMessage = ChatMessage(
       isMe: true,
       text: chatBubbleText,
       sentAt: DateTime.now(),
     );
-    final List<ChatMessage> chatsForPrompt = [
-      ...currentChats,
-      userMessage,
+
+    final List<AiChatMessage> history = [
+      for (final ChatMessage chat in [...currentChats, userMessage])
+        if (chat.text.trim().isNotEmpty)
+          AiChatMessage(role: chat.isMe ? 'user' : 'assistant', text: chat.text),
     ];
-    final String prompt = promptBuilder.buildChatPrompt(
-      mode: mode,
-      chats: chatsForPrompt,
-      attachmentText: attachmentText,
-      binaryFileNames: attachments.map((e) => e.name).toList(),
-      targetJob: targetJob,
-      experienceContext: experienceContext,
-    );
 
     return ChatTurn(
       userMessage: userMessage,
-      prompt: prompt,
+      mode: mode,
+      history: history,
+      attachmentText: attachmentText,
+      targetJob: targetJob,
+      selectedExperienceIds: selectedExperienceIds,
       attachments: attachments
           .map(
             (PickedAttachment attachment) => AiBinaryPart(
               name: attachment.name,
               bytes: attachment.bytes,
+              mimeType: attachment.mimeType,
             ),
           )
           .toList(),
