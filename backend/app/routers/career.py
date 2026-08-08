@@ -56,6 +56,17 @@ def save_master_essay(payload: dict = Body(...), user_id: str = Depends(get_user
     return store.upsert(store.KIND_MASTER_ESSAY, user_id, doc_id, payload)
 
 
+@router.delete("/master-essays/{doc_id}")
+def delete_master_essay(doc_id: str, user_id: str = Depends(get_user_id)) -> dict:
+    store.delete_doc(store.KIND_MASTER_ESSAY, user_id, doc_id)
+    # 연결된 버전도 함께 정리한다.
+    versions = store.list_docs(store.KIND_ESSAY_VERSION, user_id)
+    for version in versions:
+        if str(version.get("masterEssayId")) == doc_id:
+            store.delete_doc(store.KIND_ESSAY_VERSION, user_id, str(version.get("id")))
+    return {"ok": True}
+
+
 # --- Essay versions ---
 @router.get("/essay-versions")
 def list_essay_versions(
@@ -70,6 +81,12 @@ def list_essay_versions(
 def save_essay_version(payload: dict = Body(...), user_id: str = Depends(get_user_id)) -> dict:
     doc_id = _require_id(payload)
     return store.upsert(store.KIND_ESSAY_VERSION, user_id, doc_id, payload)
+
+
+@router.delete("/essay-versions/{doc_id}")
+def delete_essay_version(doc_id: str, user_id: str = Depends(get_user_id)) -> dict:
+    store.delete_doc(store.KIND_ESSAY_VERSION, user_id, doc_id)
+    return {"ok": True}
 
 
 # --- Portfolio projects ---

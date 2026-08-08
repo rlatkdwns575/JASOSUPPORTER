@@ -1,5 +1,3 @@
-import 'package:chatgptmini/data/services/assistant_prompts.dart';
-import 'package:chatgptmini/domain/models/chat_models.dart';
 import 'package:chatgptmini/core/constants/jaso_constants.dart';
 
 class PromptBuilder {
@@ -108,71 +106,6 @@ class PromptBuilder {
         "  title: <제목>\n"
         "  reason: <한 줄 근거>\n"
         "추천할 경험이 없으면 \"추천 없음\"만 쓰세요.";
-  }
-
-  String buildChatPrompt({
-    required AssistantMode mode,
-    required List<ChatMessage> chats,
-    required String attachmentText,
-    required List<String> binaryFileNames,
-    required String targetJob,
-    required String experienceContext,
-  }) {
-    final StringBuffer buffer = StringBuffer();
-
-    buffer.writeln("[시스템 역할 및 형식 규칙]");
-    buffer.writeln(systemPromptFor(mode));
-    buffer.writeln();
-
-    final String attachment = attachmentText.trim();
-    if (attachment.isNotEmpty) {
-      buffer.writeln("[사용자 첨부 자료]");
-      buffer.writeln(attachment);
-      buffer.writeln();
-    }
-
-    if (binaryFileNames.isNotEmpty) {
-      buffer.writeln(
-        "[멀티모달 첨부] 이 요청의 텍스트 직후에 동일 순서로 ${binaryFileNames.length}개의 "
-        "바이너리 파트(이미지 또는 PDF)가 전달된다. 파일명: "
-        "${binaryFileNames.join(", ")}",
-      );
-      buffer.writeln();
-    }
-
-    if (mode == AssistantMode.masterResume && targetJob.trim().isNotEmpty) {
-      buffer.writeln("[지원 희망 직무 — 앱 작성란]");
-      buffer.writeln(targetJob.trim());
-      buffer.writeln();
-    }
-
-    if ((mode == AssistantMode.masterResume ||
-            mode == AssistantMode.portfolio ||
-            mode == AssistantMode.interview) &&
-        experienceContext.trim().isNotEmpty) {
-      buffer.writeln(experienceContext.trim());
-      buffer.writeln();
-    }
-
-    buffer.writeln("위 규칙과 참고 데이터를 지키고, 아래 대화 맥락을 참고해 마지막 사용자 메시지에 답변한다.");
-    buffer.writeln();
-    buffer.writeln("[이전 대화 기록]");
-
-    for (final ChatMessage chat in chats) {
-      final String role = chat.isMe ? "사용자" : "AI";
-      final String text = chat.text.trim();
-      if (text.isEmpty) {
-        continue;
-      }
-      buffer.writeln("$role: $text");
-    }
-
-    buffer.writeln();
-    buffer.writeln("[답변 시 유의]");
-    buffer.writeln("- 대화 맥락을 반영하고, 마지막 사용자 요청을 최우선으로 처리한다.");
-    buffer.writeln("- 불필요한 전체 요약은 하지 않는다.");
-
-    return buffer.toString();
   }
 }
 

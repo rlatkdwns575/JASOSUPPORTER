@@ -1,3 +1,5 @@
+import 'package:chatgptmini/data/providers/gemini_models_provider.dart';
+import 'package:chatgptmini/data/remote/chat_room_repository.dart';
 import 'package:chatgptmini/data/services/assistant_prompts.dart';
 import 'package:chatgptmini/domain/models/chat_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,18 +27,63 @@ class ChatSessionState {
   }
 }
 
-/// 채팅 메시지·생성 상태를 모드별로 보관한다.
+/// 채팅 메시지·생성 상태를 모드별로 보관하고 서버에 저장한다.
 class ChatSessionNotifier extends Notifier<ChatSessionState> {
+  bool _hydrated = false;
+
+  ChatRoomRepository get _repo =>
+      ChatRoomRepository(apiClient: ref.read(apiClientProvider));
+
   @override
   ChatSessionState build() {
     final DateTime now = DateTime.now();
-    return ChatSessionState(
+    final ChatSessionState initial = ChatSessionState(
       rooms: {
         for (final AssistantMode mode in AssistantMode.values)
-          mode: ChatRoom(chats: <ChatMessage>[], createdAt: now),
+          mode: ChatRoom(
+            id: ChatRoomRepository.roomIdFor(mode),
+            mode: mode.name,
+            chats: <ChatMessage>[],
+            createdAt: now,
+          ),
       },
       isGenerating: false,
     );
+    Future<void>.microtask(_hydrate);
+    return initial;
+  }
+
+  Future<void> _hydrate() async {
+    if (_hydrated) {
+      return;
+    }
+    _hydrated = true;
+    try {
+      final Map<AssistantMode, ChatRoom> next =
+          Map<AssistantMode, ChatRoom>.of(state.rooms);
+      for (final AssistantMode mode in AssistantMode.values) {
+        final ChatRoom? remote = await _repo.getRoom(mode);
+        if (remote != null && remote.chats.isNotEmpty) {
+          next[mode] = ChatRoom(
+            id: ChatRoomRepository.roomIdFor(mode),
+            mode: mode.name,
+            chats: remote.chats,
+            createdAt: remote.createdAt,
+          );
+        }
+      }
+      state = state.copyWith(rooms: next);
+    } catch (_) {
+      // 오프라인·미기동 시 메모리 세션만 사용
+    }
+  }
+
+  Future<void> _persist(AssistantMode mode) async {
+    try {
+      await _repo.saveRoom(mode, state.roomFor(mode));
+    } catch (_) {
+      // 저장 실패해도 화면 흐름은 유지
+    }
   }
 
   void _emit({
@@ -75,6 +122,7 @@ class ChatSessionNotifier extends Notifier<ChatSessionState> {
       state.roomFor(mode).chats[assistantIndex].text = errorText;
     }
     _emit(isGenerating: false);
+    Future<void>.microtask(() => _persist(mode));
   }
 }
 

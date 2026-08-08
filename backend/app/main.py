@@ -7,18 +7,23 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .db import init_db
-from .routers import career, chat, essay, experiences
+from .logging_config import setup_logging
+from .middleware_observability import ObservabilityMiddleware
+from .routers import auth, career, chat, chat_rooms, essay, experiences
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    settings = get_settings()
+    setup_logging(settings.log_level)
     init_db()
     yield
 
 
-app = FastAPI(title="JasoSupporter API", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="JasoSupporter API", version="1.1.0", lifespan=lifespan)
 
 _settings = get_settings()
+app.add_middleware(ObservabilityMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=_settings.cors_origin_list or ["*"],
@@ -27,9 +32,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(experiences.router)
 app.include_router(career.router)
 app.include_router(chat.router)
+app.include_router(chat_rooms.router)
 app.include_router(essay.router)
 
 
@@ -39,4 +46,5 @@ def health() -> dict:
         "status": "ok",
         "gemini": _settings.gemini_enabled,
         "pinecone": _settings.pinecone_enabled,
+        "authRequired": _settings.auth_required,
     }

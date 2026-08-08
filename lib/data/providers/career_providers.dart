@@ -1,13 +1,14 @@
+import 'package:chatgptmini/core/constants/jaso_constants.dart';
+import 'package:chatgptmini/data/providers/gemini_models_provider.dart';
 import 'package:chatgptmini/data/remote/remote_career_repository.dart';
 import 'package:chatgptmini/domain/models/career_artifacts.dart';
 import 'package:chatgptmini/domain/models/experience.dart';
 import 'package:chatgptmini/domain/models/spec_item.dart';
-import 'package:chatgptmini/core/constants/jaso_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// FastAPI 기반 커리어 저장소. 화면에서는 직접 생성하지 않고 이 Provider만 사용한다.
 final careerRepositoryProvider = Provider<RemoteCareerRepository>((Ref ref) {
-  return RemoteCareerRepository();
+  return RemoteCareerRepository(apiClient: ref.watch(apiClientProvider));
 });
 
 /// 경험 카드 목록.
@@ -227,6 +228,17 @@ class EssayVersionCountsNotifier extends AsyncNotifier<Map<int, int>> {
     }
     all.sort((EssayVersion a, EssayVersion b) => b.createdAt.compareTo(a.createdAt));
     return all;
+  }
+
+  Future<void> deleteVersion(String versionId) async {
+    await _repo.deleteEssayVersion(versionId);
+    await refresh();
+  }
+
+  /// 탭에 해당하는 MasterEssay와 연결된 버전을 모두 삭제한다.
+  Future<void> deleteMasterEssayForTab(int tabIndex) async {
+    await _repo.deleteMasterEssay(masterEssayIdForTab(tabIndex));
+    await refresh();
   }
 }
 

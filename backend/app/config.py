@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     database_url: str = "sqlite:///./jaso_supporter.db"
     cors_origins: str = "*"
     rag_top_k: int = 5
+    log_level: str = "INFO"
+
+    # Auth (JWT). AUTH_REQUIRED=true 이면 Bearer 토큰 필수.
+    jwt_secret: str = "dev-change-me-jaso-supporter"
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60 * 24 * 7
+    auth_required: bool = False
 
     @property
     def cors_origin_list(self) -> list[str]:

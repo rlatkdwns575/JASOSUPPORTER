@@ -31,15 +31,6 @@ class InterviewPrepPanel extends StatelessWidget {
   final ValueChanged<InterviewAnswer> onOpenSavedAnswer;
   final ValueChanged<InterviewAnswer> onDeleteAnswer;
 
-  List<String> get _questions {
-    if (generatedQuestions.isNotEmpty) {
-      return generatedQuestions;
-    }
-    return _sampleQuestions;
-  }
-
-  bool get _showingSamples => generatedQuestions.isEmpty;
-
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -99,41 +90,50 @@ class InterviewPrepPanel extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text(
-          _showingSamples ? '연습용 질문 예시' : '생성된 예상 질문',
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.onSurface),
+        const Text(
+          '생성된 예상 질문',
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.onSurface),
         ),
         const SizedBox(height: 10),
-        for (final String q in _questions) ...[
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(AppRadii.lg),
-              onTap: enabled ? () => onOpenQuestion(q) : null,
-              child: AppCard(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const AccentIconChip(
-                      icon: Icons.record_voice_over_outlined,
-                      color: AppColors.coaching,
-                      tint: AppColors.coachingTint,
-                      size: 36,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        q,
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.35),
+        if (generatedQuestions.isEmpty)
+          const AppCard(
+            child: Text(
+              '경험을 선택한 뒤 「예상 질문 생성」을 누르면 여기에 질문이 표시됩니다. '
+              '연습용 샘플 질문은 제공하지 않으며, 저장된 Experience만 근거로 생성합니다.',
+              style: TextStyle(fontSize: 13.5, height: 1.45, color: AppColors.onSurfaceVariant),
+            ),
+          )
+        else
+          for (final String q in generatedQuestions) ...[
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(AppRadii.lg),
+                onTap: enabled ? () => onOpenQuestion(q) : null,
+                child: AppCard(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const AccentIconChip(
+                        icon: Icons.record_voice_over_outlined,
+                        color: AppColors.coaching,
+                        tint: AppColors.coachingTint,
+                        size: 36,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          q,
+                          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.35),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 10),
-        ],
+            const SizedBox(height: 10),
+          ],
         SectionHeader(
           title: '저장된 면접 답변',
           icon: Icons.bookmark_outline,
@@ -179,9 +179,3 @@ class InterviewPrepPanel extends StatelessWidget {
     );
   }
 }
-
-const List<String> _sampleQuestions = [
-  '이 프로젝트에서 본인이 담당한 역할을 구체적으로 설명해 주세요.',
-  '가장 어려웠던 문제는 무엇이었고, 어떻게 해결했나요?',
-  '그 경험에서 배운 점을 다음 업무에 어떻게 적용하고 싶나요?',
-];

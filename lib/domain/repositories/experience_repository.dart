@@ -27,9 +27,13 @@ abstract class MasterEssayRepository {
 
   Future<void> saveMasterEssay(MasterEssay essay);
 
+  Future<void> deleteMasterEssay(String id);
+
   Future<List<EssayVersion>> listEssayVersions(String masterEssayId);
 
   Future<void> saveEssayVersion(EssayVersion version);
+
+  Future<void> deleteEssayVersion(String id);
 }
 
 abstract class PortfolioProjectRepository {

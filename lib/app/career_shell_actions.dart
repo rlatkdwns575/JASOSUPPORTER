@@ -168,6 +168,26 @@ class CareerShellActions {
   Future<List<EssayVersion>> listEssayVersions(int tabIndex) {
     return ref.read(essayVersionCountsProvider.notifier).listVersions(tabIndex);
   }
+
+  Future<ShellActionResult> deleteEssayVersion(String versionId) async {
+    try {
+      await ref.read(essayVersionCountsProvider.notifier).deleteVersion(versionId);
+      return const ShellActionResult(snack: '자소서 버전을 삭제했습니다.');
+    } catch (e) {
+      return ShellActionResult(snack: '자소서 버전 삭제 실패: $e');
+    }
+  }
+
+  Future<ShellActionResult> deleteMasterEssayForTab(int tabIndex) async {
+    final String questionId =
+        tabIndex < 6 ? MasterQuestionCopy.all[tabIndex].id : 'FULL';
+    try {
+      await ref.read(essayVersionCountsProvider.notifier).deleteMasterEssayForTab(tabIndex);
+      return ShellActionResult(snack: '$questionId 자소서와 버전을 삭제했습니다.');
+    } catch (e) {
+      return ShellActionResult(snack: '자소서 삭제 실패: $e');
+    }
+  }
 }
 
 final careerShellActionsProvider = Provider<CareerShellActions>((Ref ref) {

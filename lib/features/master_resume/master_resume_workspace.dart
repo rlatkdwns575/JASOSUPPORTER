@@ -28,6 +28,7 @@ class MasterResumeWorkspace extends ConsumerStatefulWidget {
     required this.onAiFullReview,
     required this.onSaveEssayVersion,
     required this.onLoadEssayVersion,
+    required this.onDeleteEssayVersions,
   });
 
   final TabController tabController;
@@ -42,6 +43,7 @@ class MasterResumeWorkspace extends ConsumerStatefulWidget {
   final VoidCallback onAiFullReview;
   final Future<void> Function(int tabIndex, String body, List<String> selectedExperienceIds) onSaveEssayVersion;
   final Future<List<String>?> Function(int tabIndex) onLoadEssayVersion;
+  final Future<void> Function(int tabIndex) onDeleteEssayVersions;
 
   @override
   ConsumerState<MasterResumeWorkspace> createState() => _MasterResumeWorkspaceState();
@@ -557,6 +559,17 @@ class _MasterResumeWorkspaceState extends ConsumerState<MasterResumeWorkspace> {
                 icon: const Icon(Icons.restore_page_outlined, size: 18),
                 label: const Text("버전 불러오기"),
               ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                ),
+                onPressed: _versionCountForTab(i) > 0
+                    ? () => widget.onDeleteEssayVersions(i)
+                    : null,
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: const Text("저장본 삭제"),
+              ),
             ],
           ),
         ],
@@ -702,6 +715,17 @@ class _MasterResumeWorkspaceState extends ConsumerState<MasterResumeWorkspace> {
                 onPressed: _versionCountForTab(6) > 0 ? () => _loadVersion(6) : null,
                 icon: const Icon(Icons.restore_page_outlined, size: 18),
                 label: const Text("버전 불러오기"),
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                ),
+                onPressed: _versionCountForTab(6) > 0
+                    ? () => widget.onDeleteEssayVersions(6)
+                    : null,
+                icon: const Icon(Icons.delete_outline, size: 18),
+                label: const Text("저장본 삭제"),
               ),
             ],
           ),

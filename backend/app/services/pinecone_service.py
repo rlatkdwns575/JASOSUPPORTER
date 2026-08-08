@@ -1,12 +1,15 @@
 """Pinecone 벡터 저장/검색 서비스.
 
-- 네임스페이스 = user_id (단일 사용자는 "default", 추후 다중 사용자 확장 대비)
+- 네임스페이스 = user_id
 - 키가 없으면 모든 연산이 안전하게 no-op 이 되고, RAG 는 로컬 저장소 폴백을 사용한다.
 """
 
 from typing import Optional
 
 from ..config import get_settings
+from ..logging_config import get_logger
+
+logger = get_logger(__name__)
 
 _pc = None
 _index = None
@@ -27,6 +30,7 @@ def _get_index():
 
     settings = get_settings()
     if not settings.pinecone_enabled:
+        logger.info("pinecone disabled: PINECONE_API_KEY not set")
         _init_failed = True
         return None
 
@@ -36,6 +40,7 @@ def _get_index():
         _pc = Pinecone(api_key=settings.pinecone_api_key)
         existing = set(_pc.list_indexes().names())
         if settings.pinecone_index not in existing:
+            logger.info("creating pinecone index=%s", settings.pinecone_index)
             _pc.create_index(
                 name=settings.pinecone_index,
                 dimension=settings.embedding_dimension,
@@ -46,8 +51,10 @@ def _get_index():
                 ),
             )
         _index = _pc.Index(settings.pinecone_index)
+        logger.info("pinecone index ready=%s", settings.pinecone_index)
         return _index
     except Exception:
+        logger.exception("pinecone init failed index=%s", settings.pinecone_index)
         _init_failed = True
         return None
 
@@ -63,6 +70,11 @@ def upsert_experience(user_id: str, experience_id: str, values: list[float], met
         )
         return True
     except Exception:
+        logger.exception(
+            "pinecone upsert failed user_id=%s experience_id=%s",
+            user_id,
+            experience_id,
+        )
         return False
 
 
@@ -79,13 +91,18 @@ def query_experiences(user_id: str, values: list[float], top_k: int) -> list[dic
             include_metadata=True,
         )
     except Exception:
+        logger.exception("pinecone query failed user_id=%s top_k=%s", user_id, top_k)
         return []
     matches = response.get("matches") if isinstance(response, dict) else getattr(response, "matches", None)
     result: list[dict] = []
     for match in matches or []:
         metadata = match.get("metadata") if isinstance(match, dict) else getattr(match, "metadata", None)
+        score = match.get("score") if isinstance(match, dict) else getattr(match, "score", None)
         if metadata:
-            result.append(dict(metadata))
+            item = dict(metadata)
+            if score is not None:
+                item["_score"] = score
+            result.append(item)
     return result
 
 
@@ -97,4 +114,9 @@ def delete_experience(user_id: str, experience_id: str) -> bool:
         index.delete(ids=[experience_id], namespace=user_id)
         return True
     except Exception:
+        logger.exception(
+            "pinecone delete failed user_id=%s experience_id=%s",
+            user_id,
+            experience_id,
+        )
         return False

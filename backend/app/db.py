@@ -1,8 +1,7 @@
-"""SQLite(SQLModel) 기반 문서 저장소.
+"""SQLModel 기반 저장소.
 
-Experience 등 커리어 엔티티는 리스트/중첩 필드가 많아, 엔티티별 테이블 대신
-(kind, user_id, doc_id) 로 식별되는 JSON 문서 테이블로 저장한다. 이는 유연한
-스키마 변경을 허용하면서도 목록/단건 조회/삭제를 안정적으로 지원한다.
+- CareerDocument: 커리어 JSON 문서
+- AuthUser: 이메일/비밀번호 계정
 """
 
 from typing import Optional
@@ -21,6 +20,15 @@ class CareerDocument(SQLModel, table=True):
     doc_id: str = Field(index=True)
     data: str = ""
     updated_at: str = ""
+
+
+class AuthUser(SQLModel, table=True):
+    __tablename__ = "auth_users"
+
+    id: str = Field(primary_key=True)
+    email: str = Field(index=True, unique=True)
+    password_hash: str = ""
+    created_at: str = ""
 
 
 _settings = get_settings()

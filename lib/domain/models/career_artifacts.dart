@@ -1,3 +1,7 @@
+/// 마스터 자소서 문항 문서.
+///
+/// JSON 필드명은 `linkedExperienceIds`를 유지한다.
+/// 제품 문서·규칙의 `usedExperienceIds`는 [usedExperienceIds] 게터로 동일 목록을 가리킨다.
 class MasterEssay {
   const MasterEssay({
     required this.id,
@@ -18,6 +22,9 @@ class MasterEssay {
   final String? currentVersionId;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// 제품 규칙 alias — [linkedExperienceIds]와 동일.
+  List<String> get usedExperienceIds => linkedExperienceIds;
 
   factory MasterEssay.fromJson(Map<String, Object?> json) {
     return MasterEssay(
@@ -123,6 +130,10 @@ DateTime _date(Object? value) {
   return DateTime.fromMillisecondsSinceEpoch(0);
 }
 
+/// 포트폴리오 개요 프로젝트.
+///
+/// JSON 필드명은 `linkedExperienceIds`를 유지한다.
+/// 제품 문서의 `sourceExperienceIds`는 [sourceExperienceIds] 게터로 동일 목록을 가리킨다.
 class PortfolioProject {
   const PortfolioProject({
     required this.id,
@@ -151,6 +162,9 @@ class PortfolioProject {
   final String portfolioCopy;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// 제품 규칙 alias — [linkedExperienceIds]와 동일.
+  List<String> get sourceExperienceIds => linkedExperienceIds;
 
   factory PortfolioProject.fromJson(Map<String, Object?> json) {
     return PortfolioProject(
@@ -217,6 +231,10 @@ class PortfolioProject {
   }
 }
 
+/// 기업별 지원 기록.
+///
+/// JSON 필드명은 `linkedExperienceIds` / `submittedEssayVersionIds`를 유지한다.
+/// 제품 문서의 `usedExperienceIds` / `usedEssayIds`는 아래 게터로 동일 목록을 가리킨다.
 class ApplicationRecord {
   const ApplicationRecord({
     required this.id,
@@ -245,6 +263,12 @@ class ApplicationRecord {
   final String notes;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// 제품 규칙 alias — [linkedExperienceIds]와 동일.
+  List<String> get usedExperienceIds => linkedExperienceIds;
+
+  /// 제품 규칙 alias — [submittedEssayVersionIds]와 동일.
+  List<String> get usedEssayIds => submittedEssayVersionIds;
 
   factory ApplicationRecord.fromJson(Map<String, Object?> json) {
     return ApplicationRecord(

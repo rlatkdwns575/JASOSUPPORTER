@@ -2,8 +2,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// 백엔드(FastAPI) 연결 설정.
 ///
-/// 우선순위: `--dart-define=API_BASE_URL=...` > `assets/.env`의 `API_BASE_URL` > 기본값.
-/// API 키는 더 이상 클라이언트에 두지 않는다(서버 `.env`에서만 관리).
+/// 우선순위:
+/// 1. `--dart-define=API_BASE_URL=...` (배포·커스텀 URL 권장)
+/// 2. `assets/.env`의 `API_BASE_URL` (선택, gitignore)
+/// 3. `assets/.env.example`의 `API_BASE_URL` (에셋 기본값)
+/// 4. `http://localhost:8000`
+///
+/// API 키는 클라이언트에 두지 않는다(서버 `backend/.env`에서만 관리).
 class AppConfig {
   const AppConfig._();
 

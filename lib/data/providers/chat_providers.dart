@@ -1,4 +1,5 @@
-﻿import 'package:chatgptmini/data/services/ai_service.dart';
+﻿import 'package:chatgptmini/data/providers/gemini_models_provider.dart';
+import 'package:chatgptmini/data/services/ai_service.dart';
 import 'package:chatgptmini/data/services/prompt_builder.dart';
 import 'package:chatgptmini/features/chat/chat_action_controller.dart';
 import 'package:chatgptmini/features/chat/chat_flow_controller.dart';
@@ -8,9 +9,9 @@ import 'package:chatgptmini/features/master_resume/master_essay_prompt_planner.d
 import 'package:chatgptmini/features/portfolio/portfolio_prompt_planner.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// 서버 통신용 AI 서비스. 화면에서 직접 생성하지 않는다.
+/// 서버 통신용 AI 서비스. 화면에서는 직접 생성하지 않는다.
 final aiServiceProvider = Provider<AiService>((Ref ref) {
-  return HttpAiService();
+  return HttpAiService(apiClient: ref.watch(apiClientProvider));
 });
 
 /// 모드별 프롬프트 문구 조합.

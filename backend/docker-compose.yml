@@ -1,0 +1,23 @@
+# PostgreSQL for local/production-like runs.
+# Usage:
+#   docker compose up -d
+#   set DATABASE_URL=postgresql+psycopg://jaso:jaso@localhost:5432/jaso_supporter
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: jaso
+      POSTGRES_PASSWORD: jaso
+      POSTGRES_DB: jaso_supporter
+    ports:
+      - "5432:5432"
+    volumes:
+      - jaso_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jaso -d jaso_supporter"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  jaso_pg_data:

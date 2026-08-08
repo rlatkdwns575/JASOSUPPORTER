@@ -127,13 +127,19 @@ class MasterResumeShellHost extends ConsumerWidget {
             onSnack('불러올 저장 버전이 없습니다.');
             return null;
           }
-          final EssayVersion? selected = await EssayVersionPickerDialog.show(
+          final EssayVersionPickerResult? result =
+              await EssayVersionPickerDialog.show(
             context: context,
             versions: versions,
           );
-          if (selected == null || !context.mounted) {
+          if (result == null || !context.mounted) {
             return null;
           }
+          if (result.isDelete) {
+            onApplyResult(await actions.deleteEssayVersion(result.deleteId!));
+            return null;
+          }
+          final EssayVersion selected = result.version!;
           workspace.applyDraft(tabIndex: tabIndex, text: selected.body);
           onSnack('저장된 버전을 불러왔습니다.');
           return selected.sourceExperienceIds;
@@ -141,6 +147,32 @@ class MasterResumeShellHost extends ConsumerWidget {
           onSnack('자소서 버전 불러오기 실패: $e');
           return null;
         }
+      },
+      onDeleteEssayVersions: (int tabIndex) async {
+        final bool? confirmed = await showDialog<bool>(
+          context: context,
+          builder: (BuildContext ctx) {
+            return AlertDialog(
+              surfaceTintColor: Colors.transparent,
+              title: const Text('저장본 삭제'),
+              content: const Text('이 문항의 저장된 자소서와 모든 버전을 삭제할까요?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('취소'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  child: const Text('삭제'),
+                ),
+              ],
+            );
+          },
+        );
+        if (confirmed != true || !context.mounted) {
+          return;
+        }
+        onApplyResult(await actions.deleteMasterEssayForTab(tabIndex));
       },
     );
   }

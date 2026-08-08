@@ -92,6 +92,11 @@ class RemoteCareerRepository
   }
 
   @override
+  Future<void> deleteMasterEssay(String id) async {
+    await _api.delete('/master-essays/$id');
+  }
+
+  @override
   Future<List<EssayVersion>> listEssayVersions(String masterEssayId) async {
     final Object? raw = await _api.getJson(
       '/essay-versions',
@@ -103,6 +108,11 @@ class RemoteCareerRepository
   @override
   Future<void> saveEssayVersion(EssayVersion version) async {
     await _api.postJson('/essay-versions', version.toJson());
+  }
+
+  @override
+  Future<void> deleteEssayVersion(String id) async {
+    await _api.delete('/essay-versions/$id');
   }
 
   // --- Portfolio projects ---

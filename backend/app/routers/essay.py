@@ -1,7 +1,10 @@
-"""마스터 자소서 초안/전체 첨삭 엔드포인트.
+"""마스터 자소서 초안/전체 첨삭 편의 엔드포인트.
 
-문항별 지시문(instruction)을 서버에서 조립해 마지막 사용자 메시지로 붙인 뒤,
-chat 파이프라인(시스템 프롬프트 + RAG + Gemini 스트리밍)을 재사용한다.
+공식 AI 진입점은 `POST /chat` 이다. Flutter 앱도 `/chat` + 클라이언트 지시문을 사용한다.
+
+이 라우트의 `/essay/draft`, `/essay/full-review`는 서버에서 문항 지시문을 조립한 뒤
+동일한 chat 파이프라인(시스템 프롬프트 + RAG + Gemini 스트리밍)을 재사용하는
+편의 API이며, 외부 클라이언트·스크립트용으로 유지한다.
 """
 
 from fastapi import APIRouter, Depends

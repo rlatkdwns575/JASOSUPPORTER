@@ -1,9 +1,17 @@
+import 'package:chatgptmini/core/config/auth_session.dart';
+import 'package:chatgptmini/core/config/user_identity.dart';
+import 'package:chatgptmini/data/providers/auth_provider.dart';
 import 'package:chatgptmini/data/services/api_client.dart';
 import 'package:chatgptmini/domain/models/gemini_model_option.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final apiClientProvider = Provider<ApiClient>((Ref ref) {
-  final ApiClient client = ApiClient();
+  // 로그인 상태에 따라 Bearer / soft id 를 다시 읽는다.
+  ref.watch(authProvider);
+  final ApiClient client = ApiClient(
+    userId: AuthSession.userId ?? UserIdentity.forRequest,
+    accessToken: AuthSession.accessToken,
+  );
   ref.onDispose(client.close);
   return client;
 });

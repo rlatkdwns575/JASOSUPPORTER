@@ -2,19 +2,44 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:chatgptmini/core/config/app_config.dart';
+import 'package:chatgptmini/core/config/auth_session.dart';
+import 'package:chatgptmini/core/config/user_identity.dart';
 import 'package:http/http.dart' as http;
 
 /// FastAPI 백엔드와 통신하는 저수준 HTTP 클라이언트.
 ///
 /// - JSON GET/POST/DELETE 헬퍼
-/// - `/chat` 등 SSE(text/event-stream) 응답을 텍스트 청크 스트림으로 변환
+/// - `/chat` 등 SSE 응답을 텍스트 청크 스트림으로 변환
+/// - JWT가 있으면 `Authorization: Bearer`, 없으면 개발용 `X-User-Id`
 class ApiClient {
-  ApiClient({String? baseUrl, http.Client? httpClient})
-      : baseUrl = baseUrl ?? AppConfig.apiBaseUrl,
+  ApiClient({
+    String? baseUrl,
+    String? userId,
+    String? accessToken,
+    http.Client? httpClient,
+  })  : baseUrl = baseUrl ?? AppConfig.apiBaseUrl,
+        userId = userId ?? AuthSession.userId ?? UserIdentity.forRequest,
+        accessToken = accessToken ?? AuthSession.accessToken,
         _client = httpClient ?? http.Client();
 
   final String baseUrl;
+  final String userId;
+  final String? accessToken;
   final http.Client _client;
+
+  Map<String, String> _headers({bool jsonBody = false, bool sse = false}) {
+    final Map<String, String> headers = <String, String>{
+      'Accept': sse ? 'text/event-stream' : 'application/json',
+      if (jsonBody) 'Content-Type': 'application/json',
+    };
+    final String? token = accessToken?.trim();
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    } else {
+      headers['X-User-Id'] = userId;
+    }
+    return headers;
+  }
 
   Uri _uri(String path, [Map<String, String>? query]) {
     final String normalized = path.startsWith('/') ? path : '/$path';
@@ -26,7 +51,7 @@ class ApiClient {
   Future<dynamic> getJson(String path, {Map<String, String>? query}) async {
     final http.Response response = await _client.get(
       _uri(path, query),
-      headers: const {'Accept': 'application/json'},
+      headers: _headers(),
     );
     return _decode(response);
   }
@@ -34,24 +59,23 @@ class ApiClient {
   Future<dynamic> postJson(String path, Object body) async {
     final http.Response response = await _client.post(
       _uri(path),
-      headers: const {'Content-Type': 'application/json', 'Accept': 'application/json'},
+      headers: _headers(jsonBody: true),
       body: jsonEncode(body),
     );
     return _decode(response);
   }
 
   Future<void> delete(String path) async {
-    final http.Response response = await _client.delete(_uri(path));
+    final http.Response response = await _client.delete(
+      _uri(path),
+      headers: _headers(),
+    );
     _ensureOk(response.statusCode, response.body);
   }
 
-  /// SSE 스트림을 텍스트 청크로 변환한다.
-  ///
-  /// 서버 형식: `data: {"t": "..."}` 청크, 종료 시 `data: {"done": true}`.
   Stream<String> streamSse(String path, Object body) async* {
     final http.Request request = http.Request('POST', _uri(path))
-      ..headers['Content-Type'] = 'application/json'
-      ..headers['Accept'] = 'text/event-stream'
+      ..headers.addAll(_headers(jsonBody: true, sse: true))
       ..body = jsonEncode(body);
 
     final http.StreamedResponse response = await _client.send(request);
@@ -60,7 +84,8 @@ class ApiClient {
       throw ApiException(response.statusCode, errorBody);
     }
 
-    final Stream<String> lines = response.stream.transform(utf8.decoder).transform(const LineSplitter());
+    final Stream<String> lines =
+        response.stream.transform(utf8.decoder).transform(const LineSplitter());
     await for (final String line in lines) {
       if (!line.startsWith('data:')) {
         continue;

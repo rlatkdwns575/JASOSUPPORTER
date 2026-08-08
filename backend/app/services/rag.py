@@ -8,8 +8,38 @@
 
 from .. import store
 from ..config import get_settings
+from ..logging_config import get_logger
 from ..models import Experience
 from . import embedding, pinecone_service
+
+logger = get_logger(__name__)
+
+
+def _tokenize(text: str) -> set[str]:
+    return {token for token in "".join(ch.lower() if ch.isalnum() else " " for ch in text).split() if token}
+
+
+def _rerank_metadata(query: str, matches: list[dict]) -> list[dict]:
+    """P2: 벡터 top-k에 role/skill/result 키워드 겹침으로 가벼운 재정렬."""
+    q_tokens = _tokenize(query)
+    if not q_tokens or len(matches) <= 1:
+        return matches
+
+    def score(item: dict) -> float:
+        base = float(item.get("_score") or 0.0)
+        blob = " ".join(
+            [
+                str(item.get("role") or ""),
+                str(item.get("skills") or ""),
+                str(item.get("competencies") or ""),
+                str(item.get("result") or ""),
+                str(item.get("title") or ""),
+            ]
+        )
+        overlap = len(q_tokens & _tokenize(blob))
+        return base + 0.03 * overlap
+
+    return sorted(matches, key=score, reverse=True)
 
 
 def _experience_facts(exp: Experience) -> str:
@@ -61,16 +91,23 @@ def build_experience_context(
     if query_text:
         vector = embedding.embed_text(query_text, is_query=True)
         if vector is not None and pinecone_service.is_enabled():
-            matches = pinecone_service.query_experiences(user_id, vector, settings.rag_top_k)
+            # 여유분 조회 후 재정렬
+            matches = pinecone_service.query_experiences(
+                user_id, vector, max(settings.rag_top_k * 2, settings.rag_top_k)
+            )
+            matches = _rerank_metadata(query_text, matches)[: settings.rag_top_k]
             for metadata in matches:
                 exp_id = str(metadata.get("experience_id") or metadata.get("id") or "")
                 if exp_id and exp_id in used_ids:
                     continue
                 used_ids.add(exp_id)
                 retrieved.append(_facts_from_metadata(metadata))
+        elif vector is None:
+            logger.info("rag vector search skipped: embedding unavailable user_id=%s", user_id)
 
     # 3) Pinecone 결과가 없으면 로컬 저장소 최근 경험으로 폴백
     if not retrieved:
+        logger.info("rag local fallback user_id=%s", user_id)
         all_docs = store.list_docs(store.KIND_EXPERIENCE, user_id)
         all_docs.sort(key=lambda d: str(d.get("updatedAt") or ""), reverse=True)
         for doc in all_docs:

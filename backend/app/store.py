@@ -16,6 +16,7 @@ KIND_ESSAY_VERSION = "essayVersion"
 KIND_PORTFOLIO = "portfolioProject"
 KIND_APPLICATION = "applicationRecord"
 KIND_INTERVIEW_ANSWER = "interviewAnswer"
+KIND_CHAT_ROOM = "chatRoom"
 
 
 def _now_iso() -> str:
