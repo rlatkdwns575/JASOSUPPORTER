@@ -1,7 +1,7 @@
-import 'package:chatgptmini/assistant_prompts.dart';
+import 'package:chatgptmini/data/services/assistant_prompts.dart';
 import 'package:chatgptmini/data/services/ai_service.dart';
 import 'package:chatgptmini/data/services/attachment_service.dart';
-import 'package:chatgptmini/model.dart';
+import 'package:chatgptmini/domain/models/chat_models.dart';
 
 /// 한 번의 사용자 요청에 필요한 구조화 데이터.
 ///
@@ -16,6 +16,7 @@ class ChatTurn {
     required this.targetJob,
     required this.selectedExperienceIds,
     required this.attachments,
+    this.model = '',
   });
 
   final ChatMessage userMessage;
@@ -25,6 +26,7 @@ class ChatTurn {
   final String targetJob;
   final List<String> selectedExperienceIds;
   final List<AiBinaryPart> attachments;
+  final String model;
 }
 
 class ChatFlowController {
@@ -42,6 +44,7 @@ class ChatFlowController {
     required List<PickedAttachment> attachments,
     required String targetJob,
     List<String> selectedExperienceIds = const [],
+    String model = '',
   }) {
     final String main = mainText.trim();
     final String attachment = attachmentText.trim();
@@ -68,6 +71,7 @@ class ChatFlowController {
       attachments: attachments,
       targetJob: targetJob,
       selectedExperienceIds: selectedExperienceIds,
+      model: model,
     );
   }
 
@@ -79,6 +83,7 @@ class ChatFlowController {
     required List<PickedAttachment> attachments,
     required String targetJob,
     List<String> selectedExperienceIds = const [],
+    String model = '',
   }) {
     return _createTurn(
       mode: mode,
@@ -88,6 +93,7 @@ class ChatFlowController {
       attachments: attachments,
       targetJob: targetJob,
       selectedExperienceIds: selectedExperienceIds,
+      model: model,
     );
   }
 
@@ -99,6 +105,7 @@ class ChatFlowController {
       targetJob: turn.targetJob,
       selectedExperienceIds: turn.selectedExperienceIds,
       attachments: turn.attachments,
+      model: turn.model,
     );
   }
 
@@ -110,6 +117,8 @@ class ChatFlowController {
         return 'masterResume';
       case AssistantMode.portfolio:
         return 'portfolio';
+      case AssistantMode.interview:
+        return 'interview';
     }
   }
 
@@ -121,6 +130,7 @@ class ChatFlowController {
     required List<PickedAttachment> attachments,
     required String targetJob,
     required List<String> selectedExperienceIds,
+    String model = '',
   }) {
     final ChatMessage userMessage = ChatMessage(
       isMe: true,
@@ -141,6 +151,7 @@ class ChatFlowController {
       attachmentText: attachmentText,
       targetJob: targetJob,
       selectedExperienceIds: selectedExperienceIds,
+      model: model,
       attachments: attachments
           .map(
             (PickedAttachment attachment) => AiBinaryPart(

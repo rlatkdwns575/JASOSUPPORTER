@@ -15,6 +15,7 @@ KIND_MASTER_ESSAY = "masterEssay"
 KIND_ESSAY_VERSION = "essayVersion"
 KIND_PORTFOLIO = "portfolioProject"
 KIND_APPLICATION = "applicationRecord"
+KIND_INTERVIEW_ANSWER = "interviewAnswer"
 
 
 def _now_iso() -> str:

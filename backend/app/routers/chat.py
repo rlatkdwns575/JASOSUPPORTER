@@ -7,6 +7,7 @@ from typing import Iterator
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
+from ..config import get_settings
 from ..deps import get_user_id
 from ..models import ChatMessageIn, ChatRequest
 from ..services import gemini_service, prompt_builder, rag
@@ -34,8 +35,12 @@ def _latest_user_text(messages: list[ChatMessageIn]) -> str:
     return ""
 
 
-def _sse_stream(prompt: str, attachments: list[dict]) -> Iterator[bytes]:
-    for chunk in gemini_service.stream_text(prompt, attachments):
+def _sse_stream(
+    prompt: str,
+    attachments: list[dict],
+    model_name: str | None = None,
+) -> Iterator[bytes]:
+    for chunk in gemini_service.stream_text(prompt, attachments, model_name=model_name):
         if not chunk:
             continue
         payload = json.dumps({"t": chunk}, ensure_ascii=False)
@@ -53,9 +58,10 @@ def build_and_stream(
     selected_experience_ids: list[str],
     attachments: list[dict],
     binary_file_names: list[str],
+    model_name: str | None = None,
 ) -> StreamingResponse:
     experience_context = ""
-    if mode in ("masterResume", "portfolio"):
+    if mode in ("masterResume", "portfolio", "interview"):
         query = " ".join(
             part for part in [_latest_user_text(messages), target_job] if part
         ).strip()
@@ -75,10 +81,19 @@ def build_and_stream(
     )
 
     return StreamingResponse(
-        _sse_stream(prompt, attachments),
+        _sse_stream(prompt, attachments, model_name=model_name),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@router.get("/models")
+def list_models() -> dict:
+    settings = get_settings()
+    return {
+        "defaultModel": settings.gemini_model,
+        "models": settings.allowed_gemini_models,
+    }
 
 
 @router.post("/chat")
@@ -94,4 +109,5 @@ def chat(request: ChatRequest, user_id: str = Depends(get_user_id)) -> Streaming
         selected_experience_ids=request.selected_experience_ids,
         attachments=attachments,
         binary_file_names=binary_file_names,
+        model_name=request.model or None,
     )

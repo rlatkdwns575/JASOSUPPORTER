@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     # Gemini
     google_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
+    # 클라이언트가 고를 수 있는 모델 (콤마 구분). 기본 모델은 항상 포함된다.
+    gemini_allowed_models: str = (
+        "gemini-3.6-flash,gemini-2.5-flash,gemini-2.5-pro,"
+        "gemini-2.0-flash,gemini-1.5-flash,gemini-1.5-pro"
+    )
     embedding_model: str = "models/text-embedding-004"
     embedding_dimension: int = 768
 
@@ -37,6 +42,26 @@ class Settings(BaseSettings):
     @property
     def gemini_enabled(self) -> bool:
         return bool(self.google_api_key.strip())
+
+    @property
+    def allowed_gemini_models(self) -> list[str]:
+        models = [
+            item.strip()
+            for item in self.gemini_allowed_models.split(",")
+            if item.strip()
+        ]
+        default = self.gemini_model.strip()
+        if default and default not in models:
+            models.insert(0, default)
+        return models
+
+    def resolve_gemini_model(self, requested: str | None) -> str:
+        """요청 모델이 허용 목록에 있으면 사용하고, 아니면 기본 모델로 폴백한다."""
+        candidate = (requested or "").strip()
+        allowed = self.allowed_gemini_models
+        if candidate and candidate in allowed:
+            return candidate
+        return self.gemini_model
 
     @property
     def pinecone_enabled(self) -> bool:

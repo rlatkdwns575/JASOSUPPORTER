@@ -38,6 +38,7 @@ abstract class AiService {
     String targetJob,
     List<String> selectedExperienceIds,
     List<AiBinaryPart> attachments,
+    String model,
   });
 }
 
@@ -55,6 +56,7 @@ class HttpAiService implements AiService {
     String targetJob = '',
     List<String> selectedExperienceIds = const [],
     List<AiBinaryPart> attachments = const [],
+    String model = '',
   }) {
     final Map<String, Object?> body = {
       'mode': mode,
@@ -62,6 +64,7 @@ class HttpAiService implements AiService {
       'attachmentText': attachmentText,
       'targetJob': targetJob,
       'selectedExperienceIds': selectedExperienceIds,
+      'model': model,
       'attachments': attachments
           .map(
             (AiBinaryPart a) => {

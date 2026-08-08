@@ -76,15 +76,56 @@ void main() {
       companyName: 'OO기업',
       position: 'PM',
       status: '준비 중',
+      jobPostingUrl: 'https://example.com/jobs/1',
       deadline: DateTime(2026, 6, 1),
       linkedExperienceIds: const ['exp-1'],
       submittedEssayVersionIds: const ['essay-1'],
+      linkedInterviewAnswerIds: const ['interview-1'],
       notes: '메모',
       createdAt: now,
       updatedAt: now,
     );
 
     expect(PortfolioProject.fromJson(project.toJson()).linkedExperienceIds, ['exp-1']);
-    expect(ApplicationRecord.fromJson(record.toJson()).companyName, 'OO기업');
+    final ApplicationRecord restored = ApplicationRecord.fromJson(record.toJson());
+    expect(restored.companyName, 'OO기업');
+    expect(restored.jobPostingUrl, 'https://example.com/jobs/1');
+    expect(restored.linkedInterviewAnswerIds, ['interview-1']);
+  });
+
+  test('ApplicationRecord tolerates legacy JSON without new fields', () {
+    final ApplicationRecord restored = ApplicationRecord.fromJson({
+      'id': 'app-legacy',
+      'companyName': '레거시',
+      'position': '개발',
+      'status': '서류 제출',
+      'deadline': null,
+      'linkedExperienceIds': const <String>[],
+      'submittedEssayVersionIds': const <String>[],
+      'notes': '',
+      'createdAt': DateTime(2026, 1, 1).toIso8601String(),
+      'updatedAt': DateTime(2026, 1, 1).toIso8601String(),
+    });
+    expect(restored.jobPostingUrl, '');
+    expect(restored.linkedInterviewAnswerIds, isEmpty);
+  });
+
+  test('InterviewAnswer JSON round-trip preserves source experiences', () {
+    final DateTime now = DateTime(2026, 5, 19);
+    final InterviewAnswer source = InterviewAnswer(
+      id: 'interview-1',
+      question: '역할을 설명해 주세요',
+      answer: '데이터 분석을 담당했습니다.',
+      sourceExperienceIds: const ['exp-1'],
+      notes: '',
+      createdAt: now,
+      updatedAt: now,
+    );
+
+    final InterviewAnswer restored = InterviewAnswer.fromJson(source.toJson());
+    expect(restored.id, source.id);
+    expect(restored.question, source.question);
+    expect(restored.answer, source.answer);
+    expect(restored.sourceExperienceIds, source.sourceExperienceIds);
   });
 }

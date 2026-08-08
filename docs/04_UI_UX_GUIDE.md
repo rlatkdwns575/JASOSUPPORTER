@@ -10,7 +10,7 @@ Use the shared app palette rather than Material default purple tones.
 
 Current palette source:
 
-- `lib/app_colors.dart`
+- `lib/core/theme/app_colors.dart`
 
 Preferred colors:
 

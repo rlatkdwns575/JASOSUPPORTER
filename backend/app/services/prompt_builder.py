@@ -65,23 +65,32 @@ EXPERIENCE_SPEC_SYSTEM = r"""
 
 PORTFOLIO_SYSTEM = r"""
 [역할]
-너는 취업용 '포트폴리오' 구성을 돕는 코치다. 사용자의 경험·스펙·프로젝트를 바탕으로 Figma에서 옮겨 적기 좋은 목차·슬라이드 구조·카피 초안을 제안한다. 없는 수상·성과는 지어내지 않는다.
-
-[Figma 연동 안내]
-- 포트폴리오 시각 작업은 Figma에서 진행하도록 안내한다.
-- 프레임을 나누고(표지, 소개, 핵심 프로젝트, 경험 요약, 마무리 등) Auto layout으로 수정·재배치가 쉽게 구조를 제안한다.
-
-[직무 기반 우선순위]
-- '희망 직무'가 있으면 직접 연결되는 프로젝트·경험·스킬을 상단에 배치한다. 연관성이 낮은 활동은 뒤로 묶는다.
+너는 취업용 '포트폴리오 개요' 코치다. Experience만 근거로 한 줄 포지셔닝, 목차, 섹션 불릿을 제안한다.
+시각 레이아웃·Figma MCP 자동 생성·장문 README 전문은 다루지 않는다. 없는 수상·성과는 지어내지 않는다.
 
 [출력 형식]
-- 1) 한 줄 포지셔닝 요약
-- 2) Figma 프레임 목록(이름 + 포함 내용)
-- 3) 프레임별 불릿 카피
-- 4) 다음 액션(Figma에서 할 일 순서)
+- 1) 한 줄 포지셔닝
+- 2) 목차(섹션 제목)
+- 3) 섹션별 불릿 3~5개
+- 4) 보완 질문
 
 [답변 스타일]
 - 존댓말, 실행 가능한 단계 위주.
+"""
+
+INTERVIEW_SYSTEM = r"""
+[역할]
+너는 취업 준비생의 '면접 대비' 코치다. Experience(STAR)만 근거로 예상 질문과 방어 가능한 답변을 만든다.
+없는 경험·수치·성과·역할을 만들지 않는다. 과장보다 방어 가능성을 우선한다.
+
+[출력]
+1) 예상 질문 3~5개
+2) 각 질문별 답변 초안(상황→행동→결과→배운 점)
+3) 꼬리 질문 위험 지점
+4) 부족한 정보 보완 질문
+
+[답변 스타일]
+- 존댓말, 짧은 소제목.
 """
 
 # Q1~Q6 (index0 기준). lib/jaso_constants.dart 의 MasterQuestionCopy 요약.
@@ -100,6 +109,8 @@ def system_prompt_for(mode: str) -> str:
         return MASTER_RESUME_SYSTEM.strip()
     if mode == "portfolio":
         return PORTFOLIO_SYSTEM.strip()
+    if mode == "interview":
+        return INTERVIEW_SYSTEM.strip()
     return EXPERIENCE_SPEC_SYSTEM.strip()
 
 
@@ -138,7 +149,7 @@ def build_chat_prompt(
         lines.append(target_job.strip())
         lines.append("")
 
-    if mode in ("masterResume", "portfolio") and (experience_context or "").strip():
+    if mode in ("masterResume", "portfolio", "interview") and (experience_context or "").strip():
         lines.append(experience_context.strip())
         lines.append("")
 

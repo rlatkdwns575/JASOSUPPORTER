@@ -102,44 +102,39 @@ Gemini 호출은 `lib/data/services/gemini_service.dart`의 `GeminiService`를 �
 ```text
 lib/
 ├─ main.dart
-├─ assistant_prompts.dart
-├─ experience_spec_form.dart
-├─ master_resume_workspace.dart
-├─ export_service.dart
+├─ app/
 ├─ core/
 │  ├─ theme/
-│  │  ├─ app_colors.dart
-│  │  └─ app_theme.dart
 │  └─ widgets/
-│     ├─ app_components.dart
-│     ├─ chat_widgets.dart
-│     └─ composer_widgets.dart
 ├─ data/
 │  ├─ local/
-│  │  └─ json_career_repository.dart
 │  └─ services/
-│     ├─ attachment_service.dart
-│     ├─ gemini_service.dart
-│     └─ prompt_builder.dart
 ├─ domain/
 │  ├─ enums/
 │  ├─ models/
 │  └─ repositories/
 └─ features/
-   └─ chat/
-      └─ chat_flow_controller.dart
+   ├─ experience/
+   │  └─ experience_spec_form.dart
+   ├─ home/
+   ├─ master_resume/
+   ├─ portfolio/
+   ├─ chat/
+   └─ settings/
 ```
 
 주요 역할:
 
 | 경로 | 역할 |
 |------|------|
-| `main.dart` | 앱 셸, 모드 전환, split pane layout, 상위 상태 orchestration |
+| `main.dart` | 앱 실행·바인딩 초기화 |
+| `app/` | 라우팅, 셸, 전역 액션 |
 | `core/theme` | 앱 색상 토큰과 `AppTheme.light()` |
 | `core/widgets` | 카드, 섹션 헤더, 빈 상태, 채팅/입력 공통 위젯 |
 | `domain/models` | Experience 중심 도메인 모델 |
 | `data/services` | Gemini, 첨부, 프롬프트 생성 서비스 |
 | `data/local` | 로컬 JSON 저장소 |
+| `features/experience` | 경험 폼·카드·STAR 파싱 |
 | `features/chat` | 채팅 turn 구성과 AI stream 요청 준비 |
 
 ## AI Policy

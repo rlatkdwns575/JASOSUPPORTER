@@ -1,6 +1,6 @@
-import 'package:chatgptmini/assistant_prompts.dart';
+import 'package:chatgptmini/data/services/assistant_prompts.dart';
 import 'package:chatgptmini/data/services/prompt_builder.dart';
-import 'package:chatgptmini/jaso_constants.dart';
+import 'package:chatgptmini/core/constants/jaso_constants.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -34,5 +34,14 @@ void main() {
     expect(prompt, contains('portfolio.pdf'));
     expect(prompt, contains('[저장된 Experience 카드]'));
     expect(prompt, contains('불필요한 전체 요약은 하지 않는다'));
+  });
+
+  test('experience labeled STAR request includes parseable labels', () {
+    final String prompt = const PromptBuilder().experienceLabeledStarRequest('동아리 메모');
+    expect(prompt, contains('동아리 메모'));
+    expect(prompt, contains('제목:'));
+    expect(prompt, contains('상황:'));
+    expect(prompt, contains('행동:'));
+    expect(prompt, contains('배운 점:'));
   });
 }

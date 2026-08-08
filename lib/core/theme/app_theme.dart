@@ -39,8 +39,9 @@ abstract final class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: scheme.primary,
           foregroundColor: scheme.onPrimary,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 13),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.sm)),
           textStyle: const TextStyle(fontFamily: "ProductSans", fontWeight: FontWeight.w700),
         ),
       ),
@@ -49,14 +50,14 @@ abstract final class AppTheme {
           foregroundColor: scheme.primary,
           side: BorderSide(color: scheme.outlineVariant),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.sm)),
           textStyle: const TextStyle(fontFamily: "ProductSans", fontWeight: FontWeight.w700),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: scheme.primary,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.md)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadii.sm)),
           textStyle: const TextStyle(fontFamily: "ProductSans", fontWeight: FontWeight.w700),
         ),
       ),

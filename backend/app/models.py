@@ -80,12 +80,14 @@ class ChatAttachment(CamelModel):
 
 
 class ChatRequest(CamelModel):
-    mode: str = "experienceSpec"  # experienceSpec | masterResume | portfolio
+    mode: str = "experienceSpec"  # experienceSpec | masterResume | portfolio | interview
     messages: list[ChatMessageIn] = []
     attachment_text: str = ""
     target_job: str = ""
     selected_experience_ids: list[str] = []
     attachments: list[ChatAttachment] = []
+    # 선택 Gemini 모델. 비어 있거나 허용 목록 밖이면 서버 기본값 사용.
+    model: str = ""
 
 
 class EssayDraftRequest(CamelModel):

@@ -47,3 +47,11 @@ abstract class ApplicationRecordRepository {
 
   Future<void> deleteApplicationRecord(String id);
 }
+
+abstract class InterviewAnswerRepository {
+  Future<List<InterviewAnswer>> listInterviewAnswers();
+
+  Future<void> saveInterviewAnswer(InterviewAnswer answer);
+
+  Future<void> deleteInterviewAnswer(String id);
+}

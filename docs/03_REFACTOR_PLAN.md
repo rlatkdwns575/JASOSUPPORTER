@@ -67,7 +67,7 @@ lib/
 - Added first-pass domain models under `lib/domain/models`.
 - Added `ExperienceType` under `lib/domain/enums`.
 - Added repository interfaces for experiences and spec items.
-- Kept `lib/model.dart` as a compatibility export for existing chat imports.
+- Chat models live in `lib/domain/models/chat_models.dart` (legacy `lib/model.dart` barrel removed).
 - Added `ExperienceSpecFormState.toExperiences()` and `toSpecItems()` as adapters without changing current UI behavior.
 - Added `PromptBuilder` under `lib/data/services` and moved main prompt string composition out of `main.dart`.
 - Added `GeminiService` under `lib/data/services` and moved direct Gemini stream calls out of `main.dart`.

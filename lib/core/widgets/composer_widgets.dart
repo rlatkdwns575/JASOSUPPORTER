@@ -1,132 +1,291 @@
-import 'package:chatgptmini/app_colors.dart';
-import 'package:chatgptmini/core/widgets/app_components.dart';
+import 'package:chatgptmini/core/theme/app_colors.dart';
 import 'package:chatgptmini/data/services/attachment_service.dart';
+import 'package:chatgptmini/domain/models/coach_question_kind.dart';
+import 'package:chatgptmini/domain/models/gemini_model_option.dart';
 import 'package:flutter/material.dart';
 
-class AttachmentComposerPanel extends StatelessWidget {
-  const AttachmentComposerPanel({
+/// Cursor 스타일 채팅 입력 카드.
+///
+/// 상단: 첨부 칩 + 멀티라인 입력
+/// 하단: 질문 종류 / 모델 선택 + 첨부·전송
+class ChatComposer extends StatelessWidget {
+  const ChatComposer({
     super.key,
     required this.controller,
-    required this.attachments,
-    required this.isExpanded,
+    required this.focusNode,
+    required this.hintText,
+    required this.canSend,
     required this.isGenerating,
-    required this.maxBinaryCount,
-    required this.onPickFiles,
+    required this.onSend,
+    required this.attachments,
     required this.onClearAttachments,
     required this.onRemoveAttachment,
-    required this.onToggleExpanded,
+    this.onPickFiles,
+    this.selectedModelId = GeminiModelOption.defaultId,
+    this.modelOptions = GeminiModelOption.defaults,
+    this.questionKinds = const [CoachQuestionKind.freeform],
+    this.selectedQuestionKindId = 'freeform',
+    this.onModelChanged,
+    this.onQuestionKindChanged,
+    this.compact = false,
   });
 
   final TextEditingController controller;
-  final List<PickedAttachment> attachments;
-  final bool isExpanded;
+  final FocusNode focusNode;
+  final String hintText;
+  final bool canSend;
   final bool isGenerating;
-  final int maxBinaryCount;
-  final VoidCallback onPickFiles;
+  final VoidCallback onSend;
+  final List<PickedAttachment> attachments;
   final VoidCallback onClearAttachments;
   final ValueChanged<int> onRemoveAttachment;
-  final VoidCallback onToggleExpanded;
+  final VoidCallback? onPickFiles;
+  final String selectedModelId;
+  final List<GeminiModelOption> modelOptions;
+  final List<CoachQuestionKind> questionKinds;
+  final String selectedQuestionKindId;
+  final ValueChanged<String>? onModelChanged;
+  final ValueChanged<String>? onQuestionKindChanged;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
+    final List<GeminiModelOption> models = modelOptions.isEmpty
+        ? GeminiModelOption.defaults
+        : modelOptions;
+    final String modelId = models.any((GeminiModelOption m) => m.id == selectedModelId)
+        ? selectedModelId
+        : models.first.id;
+    final GeminiModelOption selectedModel = models.firstWhere(
+      (GeminiModelOption m) => m.id == modelId,
+    );
+    final String kindId =
+        questionKinds.any((CoachQuestionKind k) => k.id == selectedQuestionKindId)
+            ? selectedQuestionKindId
+            : questionKinds.first.id;
+    final CoachQuestionKind selectedKind = questionKinds.firstWhere(
+      (CoachQuestionKind k) => k.id == kindId,
+    );
+    final bool showToolbar =
+        onModelChanged != null || onQuestionKindChanged != null || onPickFiles != null;
+    final int minLines = compact ? 2 : 3;
+    final int maxLines = compact ? 5 : 8;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-      child: AppCard(
-        padding: EdgeInsets.fromLTRB(12, 8, 12, isExpanded ? 10 : 8),
-        backgroundColor: attachments.isNotEmpty
-            ? AppColors.primaryContainer.withValues(alpha: 0.28)
-            : AppColors.surface,
+      padding: AppChatStyle.composerOuter,
+      child: DecoratedBox(
+        decoration: AppChatStyle.composerDecoration,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            SectionHeader(
-              title: "자료·복붙",
-              subtitle: attachments.isEmpty
-                  ? "필요할 때만 링크·요약·파일을 붙여 주세요."
-                  : "첨부 ${attachments.length}개가 이번 AI 요청에 포함됩니다.",
-              icon: Icons.attach_file,
-              trailing: ActionBar(
-                children: [
-                  TextButton.icon(
-                    style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-                    onPressed: isGenerating ? null : onPickFiles,
-                    icon: const Icon(Icons.upload_file, size: 18, color: AppColors.primary),
-                    label: const Text("파일", style: TextStyle(fontSize: 13, color: AppColors.primary)),
-                  ),
-                  TextButton(
-                    style: TextButton.styleFrom(foregroundColor: AppColors.primary),
-                    onPressed: isGenerating || attachments.isEmpty ? null : onClearAttachments,
-                    child: const Text("첨부 지우기", style: TextStyle(fontSize: 12, color: AppColors.primary)),
-                  ),
-                  IconButton(
-                    tooltip: isExpanded ? "자료 칸 접기" : "자료 칸 펼치기",
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
-                    onPressed: isGenerating ? null : onToggleExpanded,
-                    icon: Icon(
-                      isExpanded ? Icons.expand_less : Icons.expand_more,
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
+            if (attachments.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
+                child: _AttachmentChipRow(
+                  attachments: attachments,
+                  isGenerating: isGenerating,
+                  onClearAttachments: onClearAttachments,
+                  onRemoveAttachment: onRemoveAttachment,
+                ),
+              ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              child: TextField(
+                controller: controller,
+                focusNode: focusNode,
+                minLines: minLines,
+                maxLines: maxLines,
+                enabled: !isGenerating,
+                cursorColor: AppColors.primary,
+                cursorWidth: 1.2,
+                textInputAction: TextInputAction.newline,
+                style: AppChatStyle.body,
+                onSubmitted: canSend && !isGenerating ? (_) => onSend() : null,
+                decoration: InputDecoration.collapsed(
+                  hintText: hintText,
+                  hintStyle: AppChatStyle.hint,
+                ),
               ),
             ),
-            if (isExpanded) ...[
-              const SizedBox(height: 4),
-              Text(
-                "PDF·이미지는 ‘파일’로 첨부하면 AI가 함께 봅니다(파일당 5MB, 최대 $maxBinaryCount개). "
-                "한글·Word는 여기에 요약·발췌를 붙여 주세요.",
-                style: const TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant, height: 1.4),
-              ),
-            ],
-            if (attachments.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  for (int i = 0; i < attachments.length; i++)
-                    InputChip(
-                      backgroundColor: AppColors.surfaceContainerHigh,
-                      deleteIconColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.outlineVariant),
-                      labelStyle: const TextStyle(fontSize: 12, color: AppColors.onSurface),
-                      label: Text(
-                        attachments[i].name,
-                        overflow: TextOverflow.ellipsis,
+            if (showToolbar)
+              Padding(
+                padding: AppChatStyle.toolbarPadding,
+                child: Row(
+                  children: [
+                    if (onQuestionKindChanged != null) ...[
+                      _ComposerMenuChip(
+                        label: selectedKind.label,
+                        enabled: !isGenerating,
+                        filled: true,
+                        items: [
+                          for (final CoachQuestionKind k in questionKinds)
+                            PopupMenuItem<String>(
+                              value: k.id,
+                              height: 40,
+                              child: Text(k.label, style: AppChatStyle.meta),
+                            ),
+                        ],
+                        onSelected: onQuestionKindChanged!,
                       ),
-                      onDeleted: isGenerating ? null : () => onRemoveAttachment(i),
+                      const SizedBox(width: 4),
+                    ],
+                    if (onModelChanged != null)
+                      Flexible(
+                        child: _ComposerMenuChip(
+                          label: selectedModel.label,
+                          enabled: !isGenerating,
+                          filled: false,
+                          items: [
+                            for (final GeminiModelOption m in models)
+                              PopupMenuItem<String>(
+                                value: m.id,
+                                height: 40,
+                                child: Text(
+                                  m.label,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppChatStyle.meta,
+                                ),
+                              ),
+                          ],
+                          onSelected: onModelChanged!,
+                        ),
+                      ),
+                    const Spacer(),
+                    if (onPickFiles != null)
+                      _ComposerIconButton(
+                        tooltip: attachments.isNotEmpty
+                            ? '파일 첨부 (${attachments.length})'
+                            : '파일 첨부',
+                        icon: Icons.attach_file_rounded,
+                        active: attachments.isNotEmpty,
+                        onPressed: isGenerating ? null : onPickFiles,
+                      ),
+                    const SizedBox(width: 4),
+                    _ComposerSendButton(
+                      canSend: canSend,
+                      isGenerating: isGenerating,
+                      onSend: onSend,
                     ),
-                ],
-              ),
-            ],
-            const SizedBox(height: 6),
-            TextField(
-              controller: controller,
-              cursorColor: AppColors.primary,
-              minLines: isExpanded ? 2 : 1,
-              maxLines: isExpanded ? 6 : 2,
-              style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.onSurface),
-              decoration: InputDecoration(
-                filled: true,
-                fillColor: AppColors.surfaceContainerLowest,
-                hintText: isExpanded ? "예: 수상 링크, README 발췌, 기획서 문단, 스크린샷 설명…" : "필요할 때만 짧게 붙여 넣기 (펼치기로 넓은 칸)",
-                hintStyle: const TextStyle(fontSize: 12, color: AppColors.outline),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.outlineVariant),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.outlineVariant),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 1.4),
+                  ],
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AttachmentChipRow extends StatelessWidget {
+  const _AttachmentChipRow({
+    required this.attachments,
+    required this.isGenerating,
+    required this.onClearAttachments,
+    required this.onRemoveAttachment,
+  });
+
+  final List<PickedAttachment> attachments;
+  final bool isGenerating;
+  final VoidCallback onClearAttachments;
+  final ValueChanged<int> onRemoveAttachment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        for (int i = 0; i < attachments.length; i++)
+          InputChip(
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            backgroundColor: AppColors.surfaceContainer,
+            deleteIconColor: AppColors.onSurfaceVariant,
+            side: BorderSide.none,
+            labelStyle: AppChatStyle.chip,
+            label: Text(
+              attachments[i].name,
+              overflow: TextOverflow.ellipsis,
+            ),
+            onDeleted: isGenerating ? null : () => onRemoveAttachment(i),
+          ),
+        if (attachments.length > 1)
+          TextButton(
+            onPressed: isGenerating ? null : onClearAttachments,
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              textStyle: AppChatStyle.caption,
+            ),
+            child: const Text('모두 지우기'),
+          ),
+      ],
+    );
+  }
+}
+
+class _ComposerMenuChip extends StatelessWidget {
+  const _ComposerMenuChip({
+    required this.label,
+    required this.enabled,
+    required this.filled,
+    required this.items,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool enabled;
+  final bool filled;
+  final List<PopupMenuEntry<String>> items;
+  final ValueChanged<String> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      enabled: enabled,
+      tooltip: label,
+      onSelected: onSelected,
+      offset: const Offset(0, -6),
+      padding: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppRadii.sm),
+        side: AppChatStyle.hairline,
+      ),
+      color: AppColors.surface,
+      elevation: 2,
+      shadowColor: const Color(0x140F172A),
+      itemBuilder: (_) => items,
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 148),
+        padding: EdgeInsets.symmetric(
+          horizontal: filled ? 9 : 5,
+          vertical: 5,
+        ),
+        decoration: BoxDecoration(
+          color: filled ? AppColors.surfaceContainer : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppRadii.pill),
+          border: filled ? null : Border.all(color: Colors.transparent),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: filled ? AppChatStyle.metaStrong : AppChatStyle.meta,
+              ),
+            ),
+            const SizedBox(width: 1),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 15,
+              color: AppColors.onSurfaceVariant,
             ),
           ],
         ),
@@ -135,71 +294,45 @@ class AttachmentComposerPanel extends StatelessWidget {
   }
 }
 
-class ChatInputBar extends StatelessWidget {
-  const ChatInputBar({
-    super.key,
-    required this.controller,
-    required this.focusNode,
-    required this.hintText,
-    required this.canSend,
-    required this.isGenerating,
-    required this.onSubmitted,
-    required this.onSend,
+class _ComposerIconButton extends StatelessWidget {
+  const _ComposerIconButton({
+    required this.tooltip,
+    required this.icon,
+    required this.onPressed,
+    this.active = false,
   });
 
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final String hintText;
-  final bool canSend;
-  final bool isGenerating;
-  final ValueChanged<String> onSubmitted;
-  final VoidCallback onSend;
+  final String tooltip;
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final bool active;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppRadii.lg),
-        border: Border.all(color: AppColors.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: TextField(
-        onSubmitted: onSubmitted,
-        focusNode: focusNode,
-        controller: controller,
-        cursorColor: AppColors.primary,
-        style: const TextStyle(fontSize: 14, height: 1.4, color: AppColors.onSurface),
-        minLines: 1,
-        maxLines: 6,
-        decoration: InputDecoration(
-          suffixIcon: SendButton(
-            canSend: canSend,
-            isGenerating: isGenerating,
-            onSend: onSend,
-          ),
-          hintText: hintText,
-          hintStyle: const TextStyle(fontSize: 13, color: AppColors.outline),
-          border: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.fromLTRB(18, 14, 12, 14),
+    return SizedBox(
+      width: AppChatStyle.sendSize,
+      height: AppChatStyle.sendSize,
+      child: IconButton(
+        tooltip: tooltip,
+        padding: EdgeInsets.zero,
+        visualDensity: VisualDensity.compact,
+        constraints: const BoxConstraints.tightFor(
+          width: AppChatStyle.sendSize,
+          height: AppChatStyle.sendSize,
+        ),
+        onPressed: onPressed,
+        icon: Icon(
+          icon,
+          size: AppChatStyle.iconSize,
+          color: active ? AppColors.primary : AppColors.onSurfaceVariant,
         ),
       ),
     );
   }
 }
 
-class SendButton extends StatelessWidget {
-  const SendButton({
-    super.key,
+class _ComposerSendButton extends StatelessWidget {
+  const _ComposerSendButton({
     required this.canSend,
     required this.isGenerating,
     required this.onSend,
@@ -211,24 +344,32 @@ class SendButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool enabled = canSend && !isGenerating;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4, right: 4),
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: enabled ? AppColors.primary : AppColors.chipUnselected,
-          borderRadius: BorderRadius.circular(1000),
-        ),
-        child: IconButton(
-          padding: EdgeInsets.zero,
-          icon: Icon(
-            Icons.arrow_upward_rounded,
-            color: enabled ? AppColors.onPrimary : AppColors.outline,
-            size: 20,
+    final bool active = canSend && !isGenerating;
+    return Material(
+      color: active ? AppChatStyle.sendActive : AppChatStyle.sendIdle,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: active ? onSend : null,
+        child: SizedBox(
+          width: AppChatStyle.sendSize,
+          height: AppChatStyle.sendSize,
+          child: Center(
+            child: isGenerating
+                ? const SizedBox(
+                    width: 13,
+                    height: 13,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.8,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  )
+                : Icon(
+                    Icons.arrow_upward_rounded,
+                    size: 16,
+                    color: active ? Colors.white : AppColors.onSurfaceVariant,
+                  ),
           ),
-          onPressed: enabled ? onSend : null,
         ),
       ),
     );

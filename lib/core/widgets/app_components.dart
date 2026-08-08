@@ -5,10 +5,11 @@ class AppCard extends StatelessWidget {
   const AppCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(20),
     this.margin,
     this.backgroundColor = AppColors.surface,
-    this.borderColor = AppColors.outlineVariant,
+    this.borderColor = Colors.transparent,
+    this.elevated = true,
   });
 
   final Widget child;
@@ -16,6 +17,7 @@ class AppCard extends StatelessWidget {
   final EdgeInsetsGeometry? margin;
   final Color backgroundColor;
   final Color borderColor;
+  final bool elevated;
 
   @override
   Widget build(BuildContext context) {
@@ -24,18 +26,71 @@ class AppCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(AppRadii.lg),
-        border: Border.all(color: borderColor),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.onSurface.withValues(alpha: 0.04),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: borderColor == Colors.transparent ? null : Border.all(color: borderColor),
+        boxShadow: elevated
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
       ),
       child: Padding(
         padding: padding,
         child: child,
+      ),
+    );
+  }
+}
+
+/// 기능별 accent 색을 담은 둥근 아이콘 칩(대시보드/헤더에서 사용).
+class AccentIconChip extends StatelessWidget {
+  const AccentIconChip({
+    super.key,
+    required this.icon,
+    required this.color,
+    required this.tint,
+    this.size = 40,
+  });
+
+  final IconData icon;
+  final Color color;
+  final Color tint;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: tint,
+        borderRadius: BorderRadius.circular(size * 0.3),
+      ),
+      child: Icon(icon, color: color, size: size * 0.55),
+    );
+  }
+}
+
+/// 작은 회색 태그 칩(역량 태그 등).
+class AppTag extends StatelessWidget {
+  const AppTag(this.label, {super.key});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceContainer,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w500, color: Color(0xFF475569)),
       ),
     );
   }
@@ -48,12 +103,18 @@ class SectionHeader extends StatelessWidget {
     this.subtitle,
     this.icon,
     this.trailing,
+    this.accent = AppColors.primary,
+    this.accentTint = AppColors.primaryContainer,
   });
 
   final String title;
   final String? subtitle;
   final IconData? icon;
   final Widget? trailing;
+
+  /// 아이콘 칩 색상(기능별 accent). 기본은 인디고 primary.
+  final Color accent;
+  final Color accentTint;
 
   @override
   Widget build(BuildContext context) {
@@ -65,10 +126,10 @@ class SectionHeader extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.primaryContainer.withValues(alpha: 0.7),
+              color: accentTint,
               borderRadius: BorderRadius.circular(AppRadii.sm),
             ),
-            child: Icon(icon, size: 18, color: AppColors.primary),
+            child: Icon(icon, size: 18, color: accent),
           ),
           const SizedBox(width: 10),
         ],

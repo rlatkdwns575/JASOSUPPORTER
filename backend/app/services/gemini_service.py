@@ -30,14 +30,19 @@ def _build_parts(prompt: str, attachments: Optional[list[dict]]) -> list:
     return parts
 
 
-def stream_text(prompt: str, attachments: Optional[list[dict]] = None) -> Iterator[str]:
+def stream_text(
+    prompt: str,
+    attachments: Optional[list[dict]] = None,
+    model_name: Optional[str] = None,
+) -> Iterator[str]:
     """토큰 청크를 순차적으로 yield 한다."""
     if not _ensure_configured():
         yield "[서버 오류] GOOGLE_API_KEY가 설정되지 않았습니다. 관리자에게 문의하세요."
         return
 
     settings = get_settings()
-    model = genai.GenerativeModel(settings.gemini_model)
+    resolved = settings.resolve_gemini_model(model_name)
+    model = genai.GenerativeModel(resolved)
     try:
         response = model.generate_content(_build_parts(prompt, attachments), stream=True)
         for chunk in response:
@@ -48,5 +53,9 @@ def stream_text(prompt: str, attachments: Optional[list[dict]] = None) -> Iterat
         yield f"\n[생성 중 오류가 발생했습니다: {error}]"
 
 
-def generate_text(prompt: str, attachments: Optional[list[dict]] = None) -> str:
-    return "".join(stream_text(prompt, attachments))
+def generate_text(
+    prompt: str,
+    attachments: Optional[list[dict]] = None,
+    model_name: Optional[str] = None,
+) -> str:
+    return "".join(stream_text(prompt, attachments, model_name=model_name))

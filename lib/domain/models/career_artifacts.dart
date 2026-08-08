@@ -223,9 +223,11 @@ class ApplicationRecord {
     required this.companyName,
     required this.position,
     required this.status,
+    this.jobPostingUrl = '',
     required this.deadline,
     required this.linkedExperienceIds,
     required this.submittedEssayVersionIds,
+    this.linkedInterviewAnswerIds = const <String>[],
     required this.notes,
     required this.createdAt,
     required this.updatedAt,
@@ -235,9 +237,11 @@ class ApplicationRecord {
   final String companyName;
   final String position;
   final String status;
+  final String jobPostingUrl;
   final DateTime? deadline;
   final List<String> linkedExperienceIds;
   final List<String> submittedEssayVersionIds;
+  final List<String> linkedInterviewAnswerIds;
   final String notes;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -248,9 +252,11 @@ class ApplicationRecord {
       companyName: _string(json["companyName"]),
       position: _string(json["position"]),
       status: _string(json["status"]),
+      jobPostingUrl: _string(json["jobPostingUrl"]),
       deadline: _nullableDate(json["deadline"]),
       linkedExperienceIds: _stringList(json["linkedExperienceIds"]),
       submittedEssayVersionIds: _stringList(json["submittedEssayVersionIds"]),
+      linkedInterviewAnswerIds: _stringList(json["linkedInterviewAnswerIds"]),
       notes: _string(json["notes"]),
       createdAt: _date(json["createdAt"]),
       updatedAt: _date(json["updatedAt"]),
@@ -262,9 +268,12 @@ class ApplicationRecord {
     String? companyName,
     String? position,
     String? status,
+    String? jobPostingUrl,
     DateTime? deadline,
+    bool clearDeadline = false,
     List<String>? linkedExperienceIds,
     List<String>? submittedEssayVersionIds,
+    List<String>? linkedInterviewAnswerIds,
     String? notes,
     DateTime? createdAt,
     DateTime? updatedAt,
@@ -274,9 +283,13 @@ class ApplicationRecord {
       companyName: companyName ?? this.companyName,
       position: position ?? this.position,
       status: status ?? this.status,
-      deadline: deadline ?? this.deadline,
+      jobPostingUrl: jobPostingUrl ?? this.jobPostingUrl,
+      deadline: clearDeadline ? null : (deadline ?? this.deadline),
       linkedExperienceIds: linkedExperienceIds ?? this.linkedExperienceIds,
-      submittedEssayVersionIds: submittedEssayVersionIds ?? this.submittedEssayVersionIds,
+      submittedEssayVersionIds:
+          submittedEssayVersionIds ?? this.submittedEssayVersionIds,
+      linkedInterviewAnswerIds:
+          linkedInterviewAnswerIds ?? this.linkedInterviewAnswerIds,
       notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -289,9 +302,76 @@ class ApplicationRecord {
       "companyName": companyName,
       "position": position,
       "status": status,
+      "jobPostingUrl": jobPostingUrl,
       "deadline": deadline?.toIso8601String(),
       "linkedExperienceIds": linkedExperienceIds,
       "submittedEssayVersionIds": submittedEssayVersionIds,
+      "linkedInterviewAnswerIds": linkedInterviewAnswerIds,
+      "notes": notes,
+      "createdAt": createdAt.toIso8601String(),
+      "updatedAt": updatedAt.toIso8601String(),
+    };
+  }
+}
+
+/// 면접 예상 질문·방어 가능 답변. Experience와 연결된다.
+class InterviewAnswer {
+  const InterviewAnswer({
+    required this.id,
+    required this.question,
+    required this.answer,
+    required this.sourceExperienceIds,
+    required this.createdAt,
+    required this.updatedAt,
+    this.notes = '',
+  });
+
+  final String id;
+  final String question;
+  final String answer;
+  final List<String> sourceExperienceIds;
+  final String notes;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  factory InterviewAnswer.fromJson(Map<String, Object?> json) {
+    return InterviewAnswer(
+      id: _string(json["id"]),
+      question: _string(json["question"]),
+      answer: _string(json["answer"]),
+      sourceExperienceIds: _stringList(json["sourceExperienceIds"]),
+      notes: _string(json["notes"]),
+      createdAt: _date(json["createdAt"]),
+      updatedAt: _date(json["updatedAt"]),
+    );
+  }
+
+  InterviewAnswer copyWith({
+    String? id,
+    String? question,
+    String? answer,
+    List<String>? sourceExperienceIds,
+    String? notes,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) {
+    return InterviewAnswer(
+      id: id ?? this.id,
+      question: question ?? this.question,
+      answer: answer ?? this.answer,
+      sourceExperienceIds: sourceExperienceIds ?? this.sourceExperienceIds,
+      notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  Map<String, Object?> toJson() {
+    return {
+      "id": id,
+      "question": question,
+      "answer": answer,
+      "sourceExperienceIds": sourceExperienceIds,
       "notes": notes,
       "createdAt": createdAt.toIso8601String(),
       "updatedAt": updatedAt.toIso8601String(),
@@ -305,3 +385,4 @@ DateTime? _nullableDate(Object? value) {
   }
   return null;
 }
+

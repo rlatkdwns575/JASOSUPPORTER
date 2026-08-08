@@ -14,7 +14,8 @@ class RemoteCareerRepository
         SpecItemRepository,
         MasterEssayRepository,
         PortfolioProjectRepository,
-        ApplicationRecordRepository {
+        ApplicationRecordRepository,
+        InterviewAnswerRepository {
   RemoteCareerRepository({ApiClient? apiClient}) : _api = apiClient ?? ApiClient();
 
   final ApiClient _api;
@@ -136,5 +137,22 @@ class RemoteCareerRepository
   @override
   Future<void> deleteApplicationRecord(String id) async {
     await _api.delete('/application-records/$id');
+  }
+
+  // --- Interview answers ---
+  @override
+  Future<List<InterviewAnswer>> listInterviewAnswers() async {
+    final Object? raw = await _api.getJson('/interview-answers');
+    return _asList(raw).map(InterviewAnswer.fromJson).toList(growable: false);
+  }
+
+  @override
+  Future<void> saveInterviewAnswer(InterviewAnswer answer) async {
+    await _api.postJson('/interview-answers', answer.toJson());
+  }
+
+  @override
+  Future<void> deleteInterviewAnswer(String id) async {
+    await _api.delete('/interview-answers/$id');
   }
 }

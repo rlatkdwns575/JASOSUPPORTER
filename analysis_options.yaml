@@ -1,5 +1,12 @@
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  errors:
+    unused_import: warning
+    unnecessary_import: warning
+    unused_shown_name: warning
+    duplicate_import: warning
+
 linter:
   rules:
     prefer_const_constructors: false

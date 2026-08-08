@@ -106,3 +106,21 @@ def save_application_record(payload: dict = Body(...), user_id: str = Depends(ge
 def delete_application_record(doc_id: str, user_id: str = Depends(get_user_id)) -> dict:
     store.delete_doc(store.KIND_APPLICATION, user_id, doc_id)
     return {"ok": True}
+
+
+# --- Interview answers ---
+@router.get("/interview-answers")
+def list_interview_answers(user_id: str = Depends(get_user_id)) -> list[dict]:
+    return store.list_docs(store.KIND_INTERVIEW_ANSWER, user_id)
+
+
+@router.post("/interview-answers")
+def save_interview_answer(payload: dict = Body(...), user_id: str = Depends(get_user_id)) -> dict:
+    doc_id = _require_id(payload)
+    return store.upsert(store.KIND_INTERVIEW_ANSWER, user_id, doc_id, payload)
+
+
+@router.delete("/interview-answers/{doc_id}")
+def delete_interview_answer(doc_id: str, user_id: str = Depends(get_user_id)) -> dict:
+    store.delete_doc(store.KIND_INTERVIEW_ANSWER, user_id, doc_id)
+    return {"ok": True}

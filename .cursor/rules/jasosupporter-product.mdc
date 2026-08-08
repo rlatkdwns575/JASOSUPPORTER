@@ -1,0 +1,147 @@
+---
+description: JasoSupporter 제품·UI·AI·데이터 확정 규칙 (챗봇 중심 Experience 재사용)
+alwaysApply: true
+---
+
+# JasoSupporter Product Rules
+
+## 프로젝트 정체성
+
+JasoSupporter는 Flutter 기반 취업 준비 앱이다.
+
+핵심 가치는 **챗봇(AI 코칭)의 도움으로** 경험을 구조화하고, 그 경험을 자기소개서·면접·포트폴리오 개요·지원 기록으로 재사용하는 것이다.
+
+금지하는 제품 방향:
+- 단순 AI 채팅 앱
+- 허위 경험을 만들어 주는 자소서 대필기
+- Figma MCP로 포트폴리오 시각물을 자동 생성하는 도구
+
+허용·권장하는 방향:
+- Experience(STAR) 중심 구조화
+- 챗봇으로 보완 질문·초안·첨삭·면접 질문 생성
+- 산출물은 저장·버전·연결이 가능해야 함
+
+## 핵심 데이터 흐름
+
+```
+Experience
+→ MasterEssay / EssayVersion
+→ PortfolioOutline (개요만)
+→ InterviewAnswer
+→ ApplicationRecord
+```
+
+## 챗봇(Chat-first) UI 규칙
+
+모든 주요 작업 화면은 아래 3영역이 **시각적으로 구분**되어야 한다.
+
+1. 좌측 내비게이션
+2. 중앙 작업 본문 (목록·폼·에디터)
+3. 우측 **AI 챗봇 패널** (항상 존재, 겹치지 않음)
+
+챗봇 패널 필수 구성:
+- 모드 라벨 (경험 정리 / 마스터 자소서 / 포트폴리오 개요 / 면접 대비 등)
+- 메시지 스레드
+- 빠른 액션 칩 (예: STAR로 정리, 초안 생성, 첨삭, 면접 질문)
+- 입력창
+
+챗봇 결과 액션(가능한 경우):
+- 경험 카드로 저장
+- 자소서에 적용
+- 새 버전으로 저장
+- 포트폴리오 개요로 변환
+- 면접 질문 생성
+
+금지:
+- 챗봇을 본문과 구분 없이 한 덩어리로 배치
+- 도형·패널을 겹쳐 배치
+- 화면마다 다른 챗봇 위치
+
+## 화면 IA (확정)
+
+좌측 내비 순서:
+홈 · 경험 정리 · 마스터 자소서 · 포트폴리오 개요 · 면접 대비 · 지원 관리 · 설정
+
+주요 화면:
+- H01 홈
+- E01 경험 허브 → E02 카테고리 → E03 스펙 유형 → E10 확인 → E11 완료 → E12 상세
+- M01 마스터 자소서 워크스페이스
+- P01~P03 포트폴리오 **개요만** (목차·한 줄 포지셔닝·섹션 불릿)
+- I01~I03 면접 예상 질문·답변
+- A01+ 지원 관리
+- Settings
+
+포트폴리오 비범위:
+- Figma MCP 연동
+- 자동 레이아웃/프레임 생성
+- 장문 프로젝트 전문·README 전문 자동 생성(1차)
+
+## 디자인 토큰
+
+- Scaffold `#F5F7FA`
+- Surface `#FFFFFF`
+- Text `#0F172A` / Muted `#64748B`
+- Outline `#E2E8F0`
+- 경험 Blue `#2563EB` / Tint `#EAF1FF`
+- 자소서 Indigo `#4F46E5` / Tint `#EEEDFF`
+- 포트폴리오 Teal `#0D9488` / Tint `#E5F6F3`
+- 면접·AI Purple `#6D28D9` / Tint `#F3EBFF`
+- 지원 Amber `#D97706` / Tint `#FBF0E1`
+
+프레임 기준: 1440×1024, 사이드바 240, 챗봇 패널 360, 본문 나머지.
+
+한국어 UI, ProductSans(또는 시안 Inter/Noto Sans KR), 카드 radius 12~16.
+
+## AI 금지사항
+
+AI는 사용자가 입력·선택한 Experience만 근거로 답한다.
+
+절대 금지:
+- 허위 경험·수치·성과·역할·기업명 생성
+- 키워드 나열식 자소서
+- 면접에서 방어 불가능한 과장
+
+부족하면 보완 질문을 한다. 추정하지 않는다.
+
+## 데이터·RAG
+
+- 원본(Experience/자소서/개요/면접/지원) = 로컬 DB (Source of Truth)
+- 벡터DB = Experience 요약/STAR 인덱스만 (`id` + vector)
+- 자소서·포트폴리오·제출본 전문은 벡터 인덱싱 금지
+- RAG = 벡터에서 id 검색 → 로컬 DB hydrate → Gemini
+
+## 기술 스택
+
+- Flutter(Dart) + Riverpod + go_router
+- FastAPI 백엔드 (Gemini·임베딩·RAG·CRUD)
+- API Key는 서버 `.env`만. 클라이언트 비노출
+- 화면 → Provider → Repository/AiService → ApiClient → FastAPI
+
+## 코드 구조
+
+```
+lib/
+├─ main.dart
+├─ app/
+├─ core/
+├─ domain/
+├─ data/
+└─ features/  (home, experience, master_resume, portfolio, interview, application_tracker, settings)
+```
+
+main.dart는 앱 실행만. Gemini/프롬프트/RAG는 서버 또는 data service.
+
+## Figma 작업 규칙
+
+- 한 프레임 = 한 화면. 겹침 금지.
+- 사용 흐름 순서로 좌→우, 행 단위 배치.
+- 새 시안을 만들 때 깨진 기존 레이어를 땜질하지 말고, 필요 시 행을 비우고 재작성한다.
+- 챗봇 패널 없는 작업 화면 시안은 불완전으로 본다.
+
+## 작업 보고
+
+1. 생성한 파일
+2. 수정한 파일
+3. 변경 이유
+4. 테스트 여부
+5. 다음 작업
