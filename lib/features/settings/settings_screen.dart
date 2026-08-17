@@ -1,9 +1,12 @@
 import 'package:chatgptmini/core/config/app_config.dart';
 import 'package:chatgptmini/core/config/user_identity.dart';
 import 'package:chatgptmini/core/theme/app_colors.dart';
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/core/utils/string_extensions.dart';
 import 'package:chatgptmini/core/widgets/app_components.dart';
 import 'package:chatgptmini/data/providers/auth_provider.dart';
+import 'package:chatgptmini/data/providers/backend_health_provider.dart';
+import 'package:chatgptmini/domain/models/backend_health.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -55,7 +58,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
       }
     } catch (e) {
-      setState(() => _authError = '$e');
+      setState(() => _authError = apiErrorMessage(e));
     } finally {
       if (mounted) {
         setState(() => _busy = false);
@@ -74,9 +77,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  bool _validatePassword() {
+    if (_password.text.trim().length < 8) {
+      setState(() => _authError = '비밀번호는 8자 이상이어야 합니다.');
+      return false;
+    }
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final AuthState auth = ref.watch(authProvider);
+    final AsyncValue<BackendHealth> health = ref.watch(backendHealthProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(28),
@@ -148,25 +160,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           FilledButton(
                             onPressed: _busy
                                 ? null
-                                : () => _runAuth(
+                                : () {
+                                    if (!_validatePassword()) {
+                                      return;
+                                    }
+                                    _runAuth(
                                       () => ref.read(authProvider.notifier).login(
                                             _email.text,
                                             _password.text,
                                           ),
                                       successMessage: '로그인되었습니다.',
-                                    ),
+                                    );
+                                  },
                             child: const Text('로그인'),
                           ),
                           OutlinedButton(
                             onPressed: _busy
                                 ? null
-                                : () => _runAuth(
+                                : () {
+                                    if (!_validatePassword()) {
+                                      return;
+                                    }
+                                    _runAuth(
                                       () => ref.read(authProvider.notifier).register(
                                             _email.text,
                                             _password.text,
                                           ),
                                       successMessage: '회원가입 및 로그인되었습니다.',
-                                    ),
+                                    );
+                                  },
                             child: const Text('회원가입'),
                           ),
                         ],
@@ -205,6 +227,50 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const _InfoRow(
                       label: 'API 키',
                       value: '클라이언트에 노출하지 않습니다.',
+                    ),
+                    const Divider(height: 22, color: AppColors.outlineVariant),
+                    health.when(
+                      loading: () => const _InfoRow(
+                        label: '서버 상태',
+                        value: '확인 중...',
+                      ),
+                      error: (Object error, StackTrace _) => _InfoRow(
+                        label: '서버 상태',
+                        value: '연결 실패 · ${apiErrorMessage(error)}',
+                      ),
+                      data: (BackendHealth data) => Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _InfoRow(label: '서버 상태', value: data.statusLabel),
+                          const Divider(height: 22, color: AppColors.outlineVariant),
+                          _InfoRow(label: 'Gemini', value: data.geminiLabel),
+                          const Divider(height: 22, color: AppColors.outlineVariant),
+                          _InfoRow(label: 'Pinecone', value: data.pineconeLabel),
+                          const Divider(height: 22, color: AppColors.outlineVariant),
+                          _InfoRow(label: '임베딩', value: data.embeddingLabel),
+                          if (data.pineconeDimensionMismatch) ...[
+                            const SizedBox(height: 10),
+                            Text(
+                              'Pinecone 인덱스 차원과 EMBEDDING_DIMENSION이 일치하지 않습니다. '
+                              'backend/.env 값을 인덱스 차원에 맞추거나 인덱스를 재생성하세요.'.softWrapWords(),
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: AppColors.error,
+                                height: 1.45,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: OutlinedButton.icon(
+                        onPressed: () => ref.invalidate(backendHealthProvider),
+                        icon: const Icon(Icons.refresh, size: 18),
+                        label: const Text('서버 상태 새로고침'),
+                      ),
                     ),
                   ],
                 ),
