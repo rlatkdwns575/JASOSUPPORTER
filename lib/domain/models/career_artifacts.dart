@@ -130,6 +130,9 @@ DateTime _date(Object? value) {
   return DateTime.fromMillisecondsSinceEpoch(0);
 }
 
+/// 제품 문서용 alias. 저장·API 모델은 [PortfolioProject]를 사용한다.
+typedef PortfolioOutline = PortfolioProject;
+
 /// 포트폴리오 개요 프로젝트.
 ///
 /// JSON 필드명은 `linkedExperienceIds`를 유지한다.

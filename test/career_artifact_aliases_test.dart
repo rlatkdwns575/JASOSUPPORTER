@@ -19,6 +19,25 @@ void main() {
     expect(essay.usedExperienceIds, <String>['exp-1', 'exp-2']);
   });
 
+  test('PortfolioOutline is an alias of PortfolioProject', () {
+    final PortfolioOutline outline = PortfolioProject(
+      id: 'p-outline',
+      title: '개요',
+      linkedExperienceIds: const <String>['exp-1'],
+      role: '역할',
+      problem: '문제',
+      solution: '해결',
+      techStacks: const <String>[],
+      result: '결과',
+      evidenceLinks: const <String>[],
+      portfolioCopy: '카피',
+      createdAt: now,
+      updatedAt: now,
+    );
+    expect(outline, isA<PortfolioProject>());
+    expect(outline.sourceExperienceIds, const <String>['exp-1']);
+  });
+
   test('PortfolioProject.sourceExperienceIds aliases linkedExperienceIds', () {
     final PortfolioProject project = PortfolioProject(
       id: 'p1',

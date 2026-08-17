@@ -14,15 +14,50 @@ logger = get_logger(__name__)
 _pc = None
 _index = None
 _init_failed = False
+_dimension_mismatch = False
 
 
 def is_enabled() -> bool:
     return get_settings().pinecone_enabled and not _init_failed
 
 
+def dimension_mismatch() -> bool:
+    return _dimension_mismatch
+
+
+def _read_index_dimension(pc: object, index_name: str) -> int | None:
+    try:
+        description = pc.describe_index(index_name)
+    except Exception:
+        logger.exception("pinecone describe_index failed index=%s", index_name)
+        return None
+    dimension = getattr(description, "dimension", None)
+    if dimension is None and isinstance(description, dict):
+        dimension = description.get("dimension")
+    return int(dimension) if dimension is not None else None
+
+
+def _validate_index_dimension(pc: object, index_name: str, expected: int) -> bool:
+    actual = _read_index_dimension(pc, index_name)
+    if actual is None:
+        return True
+    if actual == expected:
+        return True
+    global _dimension_mismatch
+    _dimension_mismatch = True
+    logger.error(
+        "pinecone index dimension mismatch index=%s got=%s expected=%s; "
+        "set EMBEDDING_DIMENSION to match the index or recreate the index",
+        index_name,
+        actual,
+        expected,
+    )
+    return False
+
+
 def _get_index():
     """인덱스 핸들을 반환한다. 필요 시 인덱스를 생성한다. 실패하면 None."""
-    global _pc, _index, _init_failed
+    global _pc, _index, _init_failed, _dimension_mismatch
     if _init_failed:
         return None
     if _index is not None:
@@ -50,6 +85,13 @@ def _get_index():
                     region=settings.pinecone_region,
                 ),
             )
+        elif not _validate_index_dimension(
+            _pc,
+            settings.pinecone_index,
+            settings.embedding_dimension,
+        ):
+            _init_failed = True
+            return None
         _index = _pc.Index(settings.pinecone_index)
         logger.info("pinecone index ready=%s", settings.pinecone_index)
         return _index

@@ -10,6 +10,7 @@ from .db import init_db
 from .logging_config import get_logger, setup_logging
 from .middleware_observability import ObservabilityMiddleware
 from .routers import auth, career, chat, chat_rooms, essay, experiences
+from .services import pinecone_service
 
 
 @asynccontextmanager
@@ -55,6 +56,7 @@ def health() -> dict:
         "status": "ok",
         "gemini": _settings.gemini_enabled,
         "pinecone": _settings.pinecone_enabled,
+        "pineconeDimensionMismatch": pinecone_service.dimension_mismatch(),
         "authRequired": _settings.auth_required,
         "embeddingModel": _settings.embedding_model,
         "embeddingDimension": _settings.embedding_dimension,
