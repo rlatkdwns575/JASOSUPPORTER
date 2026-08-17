@@ -39,6 +39,7 @@ def test_health(client: TestClient) -> None:
     assert body["genaiSdk"] == "google-genai"
     assert "embeddingDimension" in body
     assert "pineconeDimensionMismatch" in body
+    assert isinstance(body["jwtSecretConfigured"], bool)
 
 
 def test_experience_roundtrip(client: TestClient, user_headers: dict[str, str]) -> None:

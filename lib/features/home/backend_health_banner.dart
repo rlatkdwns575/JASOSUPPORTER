@@ -1,6 +1,7 @@
 import 'package:chatgptmini/app/app_routes.dart';
 import 'package:chatgptmini/core/theme/app_colors.dart';
 import 'package:chatgptmini/core/utils/string_extensions.dart';
+import 'package:chatgptmini/data/providers/auth_provider.dart';
 import 'package:chatgptmini/data/providers/backend_health_provider.dart';
 import 'package:chatgptmini/domain/models/backend_health.dart';
 import 'package:flutter/material.dart';
@@ -18,10 +19,14 @@ class BackendHealthBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<BackendHealth> health = ref.watch(backendHealthProvider);
+    final AuthState auth = ref.watch(authProvider);
     final String? message = health.when(
       loading: () => null,
       error: (_, __) => backendHealthBannerMessage(hasError: true),
-      data: (BackendHealth data) => backendHealthBannerMessage(health: data),
+      data: (BackendHealth data) => backendHealthBannerMessage(
+        health: data,
+        isLoggedIn: auth.isLoggedIn,
+      ),
     );
     if (message == null) {
       return const SizedBox.shrink();
@@ -68,12 +73,19 @@ class BackendHealthBanner extends ConsumerWidget {
 String? backendHealthBannerMessage({
   BackendHealth? health,
   bool hasError = false,
+  bool isLoggedIn = true,
 }) {
   if (hasError) {
     return '백엔드에 연결할 수 없습니다. 서버가 실행 중인지 확인해 주세요.';
   }
   if (health == null) {
     return null;
+  }
+  if (health.authRequired && !isLoggedIn) {
+    return '서버가 JWT 인증을 요구합니다. 설정에서 로그인해 주세요.';
+  }
+  if (!health.jwtSecretConfigured) {
+    return 'JWT_SECRET이 기본값입니다. 프로덕션 배포 전 backend/.env 를 변경하세요.';
   }
   if (health.pineconeDimensionMismatch) {
     return 'Pinecone 인덱스 차원과 EMBEDDING_DIMENSION이 일치하지 않습니다. '

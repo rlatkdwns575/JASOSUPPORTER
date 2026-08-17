@@ -1,8 +1,11 @@
 """애플리케이션 설정. 모든 비밀 키는 이 계층(.env)에서만 로드된다."""
 
 from functools import lru_cache
+from typing import ClassVar
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DEFAULT_JWT_SECRET = "dev-change-me-jaso-supporter"
 
 
 class Settings(BaseSettings):
@@ -41,6 +44,13 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24 * 7
     auth_required: bool = False
+
+    DEFAULT_JWT_SECRET: ClassVar[str] = DEFAULT_JWT_SECRET
+
+    @property
+    def jwt_secret_is_default(self) -> bool:
+        secret = self.jwt_secret.strip()
+        return not secret or secret == DEFAULT_JWT_SECRET or len(secret) < 16
 
     @property
     def cors_origin_list(self) -> list[str]:

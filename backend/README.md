@@ -39,6 +39,8 @@ DATABASE_URL=postgresql+psycopg://jaso:jaso@localhost:5432/jaso_supporter
 
 SQLite는 단일 노드 개발용입니다. 배포 시 Postgres + `CORS_ORIGINS`에 웹 도메인을 지정하세요.
 
+프로덕션 체크리스트는 [DEPLOY.md](./DEPLOY.md)를 참고하세요.
+
 ## 인증
 
 | 설정 | 동작 |

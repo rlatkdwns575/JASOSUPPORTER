@@ -36,6 +36,38 @@ void main() {
     expect(message, contains('Gemini'));
   });
 
+  test('backendHealthBannerMessage warns when auth required but logged out', () {
+    expect(
+      backendHealthBannerMessage(
+        health: const BackendHealth(
+          status: 'ok',
+          geminiEnabled: true,
+          pineconeEnabled: true,
+          authRequired: true,
+          pineconeDimensionMismatch: false,
+        ),
+        isLoggedIn: false,
+      ),
+      contains('JWT 인증'),
+    );
+  });
+
+  test('backendHealthBannerMessage warns when jwt secret not configured', () {
+    expect(
+      backendHealthBannerMessage(
+        health: const BackendHealth(
+          status: 'ok',
+          geminiEnabled: true,
+          pineconeEnabled: true,
+          authRequired: false,
+          pineconeDimensionMismatch: false,
+          jwtSecretConfigured: false,
+        ),
+      ),
+      contains('JWT_SECRET'),
+    );
+  });
+
   test('backendHealthBannerMessage is null when healthy', () {
     expect(
       backendHealthBannerMessage(
@@ -45,6 +77,7 @@ void main() {
           pineconeEnabled: true,
           authRequired: false,
           pineconeDimensionMismatch: false,
+          jwtSecretConfigured: true,
         ),
       ),
       isNull,

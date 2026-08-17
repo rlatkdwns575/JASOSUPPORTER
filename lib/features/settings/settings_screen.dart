@@ -248,6 +248,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           _InfoRow(label: 'Pinecone', value: data.pineconeLabel),
                           const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(label: '임베딩', value: data.embeddingLabel),
+                          const Divider(height: 22, color: AppColors.outlineVariant),
+                          _InfoRow(
+                            label: 'JWT Secret',
+                            value: data.jwtSecretConfigured ? '설정됨' : '기본값 (변경 필요)',
+                          ),
                           if (data.pineconeDimensionMismatch) ...[
                             const SizedBox(height: 10),
                             Text(

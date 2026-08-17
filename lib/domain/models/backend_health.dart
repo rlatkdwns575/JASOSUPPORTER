@@ -6,6 +6,7 @@ class BackendHealth {
     required this.pineconeEnabled,
     required this.authRequired,
     required this.pineconeDimensionMismatch,
+    this.jwtSecretConfigured = true,
     this.embeddingModel,
     this.embeddingDimension,
     this.genaiSdk,
@@ -16,6 +17,7 @@ class BackendHealth {
   final bool pineconeEnabled;
   final bool authRequired;
   final bool pineconeDimensionMismatch;
+  final bool jwtSecretConfigured;
   final String? embeddingModel;
   final int? embeddingDimension;
   final String? genaiSdk;
@@ -29,6 +31,7 @@ class BackendHealth {
       pineconeEnabled: json['pinecone'] == true,
       authRequired: json['authRequired'] == true,
       pineconeDimensionMismatch: json['pineconeDimensionMismatch'] == true,
+      jwtSecretConfigured: json['jwtSecretConfigured'] != false,
       embeddingModel: json['embeddingModel']?.toString(),
       embeddingDimension: _readInt(json['embeddingDimension']),
       genaiSdk: json['genaiSdk']?.toString(),

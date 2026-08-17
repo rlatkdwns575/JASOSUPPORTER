@@ -26,6 +26,12 @@ async def lifespan(app: FastAPI):
         settings.embedding_model,
         settings.embedding_dimension,
     )
+    if settings.auth_required and settings.jwt_secret_is_default:
+        logger.warning(
+            "AUTH_REQUIRED=true but JWT_SECRET is default or too short; change JWT_SECRET before production"
+        )
+    if settings.auth_required and settings.cors_origin_list == ["*"]:
+        logger.warning("AUTH_REQUIRED=true with CORS_ORIGINS=*; restrict origins in production")
     init_db()
     yield
 
@@ -58,6 +64,7 @@ def health() -> dict:
         "pinecone": _settings.pinecone_enabled,
         "pineconeDimensionMismatch": pinecone_service.dimension_mismatch(),
         "authRequired": _settings.auth_required,
+        "jwtSecretConfigured": not _settings.jwt_secret_is_default,
         "embeddingModel": _settings.embedding_model,
         "embeddingDimension": _settings.embedding_dimension,
         "genaiSdk": "google-genai",
