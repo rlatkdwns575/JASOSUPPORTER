@@ -5,6 +5,7 @@ import 'package:chatgptmini/core/widgets/app_components.dart';
 import 'package:chatgptmini/domain/models/career_artifacts.dart';
 import 'package:chatgptmini/domain/models/experience.dart';
 import 'package:chatgptmini/features/experience/experience_star_validator.dart';
+import 'package:chatgptmini/features/home/backend_health_banner.dart';
 import 'package:flutter/material.dart';
 
 /// 홈 대시보드. 경험·자소서·포트폴리오·지원 현황을 한눈에 보여주는 진입 화면.
@@ -39,7 +40,10 @@ class HomeDashboard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _buildHeader(narrow),
-              const SizedBox(height: 24),
+              BackendHealthBanner(
+                onOpenSettings: () => onNavigate(AppRoutes.settings),
+              ),
+              const SizedBox(height: 8),
               _buildStatCards(narrow),
               const SizedBox(height: 20),
               _buildMidRow(narrow),
