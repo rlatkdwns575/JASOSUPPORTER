@@ -46,6 +46,10 @@ void main() {
         'university',
         'gradSchool',
         'certificate',
+        'language',
+        'scholarship',
+        'volunteer',
+        'otherSpec',
       ]);
       expect(
         ExperienceSubtypeCopy.fromQuery('university')?.category,

@@ -2,31 +2,19 @@
 
 from typing import Iterator, Optional
 
-import google.generativeai as genai
+from google.genai import types
 
 from ..config import get_settings
-
-_configured = False
-
-
-def _ensure_configured() -> bool:
-    global _configured
-    settings = get_settings()
-    if not settings.gemini_enabled:
-        return False
-    if not _configured:
-        genai.configure(api_key=settings.google_api_key)
-        _configured = True
-    return True
+from .gemini_client import get_genai_client
 
 
-def _build_parts(prompt: str, attachments: Optional[list[dict]]) -> list:
+def _build_contents(prompt: str, attachments: Optional[list[dict]]) -> list:
     parts: list = [prompt]
     for attachment in attachments or []:
         data = attachment.get("data")
         mime_type = attachment.get("mime_type")
         if data and mime_type:
-            parts.append({"mime_type": mime_type, "data": data})
+            parts.append(types.Part.from_bytes(data=data, mime_type=mime_type))
     return parts
 
 
@@ -36,16 +24,18 @@ def stream_text(
     model_name: Optional[str] = None,
 ) -> Iterator[str]:
     """토큰 청크를 순차적으로 yield 한다."""
-    if not _ensure_configured():
+    client = get_genai_client()
+    if client is None:
         yield "[서버 오류] GOOGLE_API_KEY가 설정되지 않았습니다. 관리자에게 문의하세요."
         return
 
     settings = get_settings()
     resolved = settings.resolve_gemini_model(model_name)
-    model = genai.GenerativeModel(resolved)
     try:
-        response = model.generate_content(_build_parts(prompt, attachments), stream=True)
-        for chunk in response:
+        for chunk in client.models.generate_content_stream(
+            model=resolved,
+            contents=_build_contents(prompt, attachments),
+        ):
             text = getattr(chunk, "text", None)
             if text:
                 yield text

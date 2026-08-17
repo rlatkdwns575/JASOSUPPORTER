@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from ..config import get_settings
 from .. import store
 from ..deps import get_user_id
 from ..logging_config import get_logger
@@ -38,6 +39,13 @@ def _index_experience(user_id: str, exp: Experience) -> None:
     ok = pinecone_service.upsert_experience(user_id, exp.id, vector, metadata)
     if not ok:
         logger.warning("pinecone upsert returned false id=%s user_id=%s", exp.id, user_id)
+    elif len(vector) != get_settings().embedding_dimension:
+        logger.warning(
+            "vector length %s does not match EMBEDDING_DIMENSION=%s for id=%s",
+            len(vector),
+            get_settings().embedding_dimension,
+            exp.id,
+        )
 
 
 @router.get("")

@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import get_settings
 from .db import init_db
-from .logging_config import setup_logging
+from .logging_config import get_logger, setup_logging
 from .middleware_observability import ObservabilityMiddleware
 from .routers import auth, career, chat, chat_rooms, essay, experiences
 
@@ -16,6 +16,15 @@ from .routers import auth, career, chat, chat_rooms, essay, experiences
 async def lifespan(app: FastAPI):
     settings = get_settings()
     setup_logging(settings.log_level)
+    logger = get_logger(__name__)
+    logger.info(
+        "startup gemini=%s pinecone=%s auth_required=%s embedding_model=%s embedding_dim=%s",
+        settings.gemini_enabled,
+        settings.pinecone_enabled,
+        settings.auth_required,
+        settings.embedding_model,
+        settings.embedding_dimension,
+    )
     init_db()
     yield
 
@@ -47,4 +56,7 @@ def health() -> dict:
         "gemini": _settings.gemini_enabled,
         "pinecone": _settings.pinecone_enabled,
         "authRequired": _settings.auth_required,
+        "embeddingModel": _settings.embedding_model,
+        "embeddingDimension": _settings.embedding_dimension,
+        "genaiSdk": "google-genai",
     }

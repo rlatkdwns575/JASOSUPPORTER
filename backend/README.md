@@ -1,6 +1,7 @@
 # JasoSupporter Backend (FastAPI)
 
-Gemini·RAG·커리어 CRUD·JWT 인증을 담당합니다. API 키는 서버 `.env`에만 둡니다.
+Gemini·RAG·커리어 CRUD·JWT 인증을 담당합니다. API 키는 서버 `.env`에만 둡니다.  
+Gemini 호출은 **`google-genai`** SDK(`Client.models.generate_content_stream`, `embed_content`)를 사용합니다.
 
 ## 구조
 
@@ -10,7 +11,7 @@ backend/
 │  ├─ main.py / config.py / deps.py / db.py / store.py
 │  ├─ logging_config.py / middleware_observability.py
 │  ├─ routers/   auth, experiences, career, chat, chat_rooms, essay
-│  └─ services/  auth, embedding, gemini, pinecone, rag, prompt_builder
+│  └─ services/  auth, embedding, gemini, gemini_client, pinecone, rag, prompt_builder
 ├─ eval/         rag_eval, generation_eval
 ├─ tests/
 ├─ docker-compose.yml   # Postgres
@@ -52,7 +53,7 @@ SQLite는 단일 노드 개발용입니다. 배포 시 Postgres + `CORS_ORIGINS`
 
 | 경로 | 설명 |
 |------|------|
-| `/health` | gemini/pinecone/authRequired |
+| `/health` | gemini/pinecone/authRequired/embedding 설정 |
 | `/models`, `/chat` | 모델 목록, AI SSE |
 | `/chat-rooms` | 코치 대화 영속화 |
 | `/experiences` | CRUD + 임베딩 upsert (role/skills/result 메타) |
@@ -75,6 +76,12 @@ python -m eval.generation_eval
 
 - RAG: gold query hit@k (로컬 폴백 포함)
 - Generation: 응답의 미제공 수치·기업명 휴리스틱
+
+## 임베딩·Pinecone
+
+- `EMBEDDING_MODEL` 기본: `models/text-embedding-004`
+- `EMBEDDING_DIMENSION`은 **Pinecone 인덱스 차원과 반드시 일치**해야 합니다 (예: 512 또는 768)
+- `text-embedding-004`는 `output_dimensionality`로 차원 축소를 지원합니다
 
 ## RAG 요약
 

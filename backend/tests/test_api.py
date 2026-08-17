@@ -36,6 +36,8 @@ def test_health(client: TestClient) -> None:
     assert body["status"] == "ok"
     assert "gemini" in body
     assert "pinecone" in body
+    assert body["genaiSdk"] == "google-genai"
+    assert "embeddingDimension" in body
 
 
 def test_experience_roundtrip(client: TestClient, user_headers: dict[str, str]) -> None:

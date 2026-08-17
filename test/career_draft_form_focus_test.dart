@@ -22,8 +22,8 @@ void main() {
       expect(state.formReturnPath, AppRoutes.experienceFormCategory('spec'));
     });
 
-    test('falls back to plain form', () {
-      expect(const CareerDraftState().formReturnPath, AppRoutes.experienceForm);
+    test('falls back to experience hub', () {
+      expect(const CareerDraftState().formReturnPath, AppRoutes.experience);
     });
   });
 }

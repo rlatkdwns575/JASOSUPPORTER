@@ -1,5 +1,6 @@
 import 'package:chatgptmini/core/config/auth_session.dart';
 import 'package:chatgptmini/core/config/user_identity.dart';
+import 'package:chatgptmini/data/providers/session_lifecycle.dart';
 import 'package:chatgptmini/data/services/api_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -58,6 +59,7 @@ class AuthNotifier extends Notifier<AuthState> {
       email: null,
       userId: UserIdentity.forRequest,
     );
+    refreshUserSessionData(ref);
   }
 
   Future<void> _applyTokenResponse(Object raw) async {
@@ -72,6 +74,7 @@ class AuthNotifier extends Notifier<AuthState> {
     }
     await AuthSession.save(token: token, id: id, userEmail: userEmail);
     state = AuthState(isLoggedIn: true, email: userEmail, userId: id);
+    refreshUserSessionData(ref);
   }
 }
 

@@ -1,3 +1,4 @@
+import 'package:chatgptmini/data/providers/auth_provider.dart';
 import 'package:chatgptmini/data/providers/gemini_models_provider.dart';
 import 'package:chatgptmini/data/remote/chat_room_repository.dart';
 import 'package:chatgptmini/data/services/assistant_prompts.dart';
@@ -36,6 +37,13 @@ class ChatSessionNotifier extends Notifier<ChatSessionState> {
 
   @override
   ChatSessionState build() {
+    ref.listen<AuthState>(authProvider, (AuthState? previous, AuthState next) {
+      if (previous?.userId != next.userId) {
+        _hydrated = false;
+        Future<void>.microtask(_hydrate);
+      }
+    });
+
     final DateTime now = DateTime.now();
     final ChatSessionState initial = ChatSessionState(
       rooms: {
@@ -99,6 +107,7 @@ class ChatSessionNotifier extends Notifier<ChatSessionState> {
   void addUserAndStart(AssistantMode mode, ChatMessage userMessage) {
     state.roomFor(mode).chats.add(userMessage);
     _emit(isGenerating: true);
+    Future<void>.microtask(() => _persist(mode));
   }
 
   int addAssistantPlaceholder(AssistantMode mode) {
