@@ -16,4 +16,18 @@ void main() {
       '요청에 실패했습니다. 잠시 후 다시 시도해 주세요.',
     );
   });
+
+  test('apiErrorMessage maps expired token to login hint', () {
+    final String message = apiErrorMessage(
+      ApiException(401, '{"detail":"Invalid or expired token"}'),
+    );
+    expect(message, '로그인이 만료되었거나 인증이 필요합니다. 설정에서 다시 로그인해 주세요.');
+  });
+
+  test('apiErrorMessage keeps login credential detail', () {
+    final String message = apiErrorMessage(
+      ApiException(401, '{"detail":"이메일 또는 비밀번호가 올바르지 않습니다."}'),
+    );
+    expect(message, '이메일 또는 비밀번호가 올바르지 않습니다.');
+  });
 }

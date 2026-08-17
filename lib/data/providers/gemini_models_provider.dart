@@ -11,6 +11,11 @@ final apiClientProvider = Provider<ApiClient>((Ref ref) {
   final ApiClient client = ApiClient(
     userId: AuthSession.userId ?? UserIdentity.forRequest,
     accessToken: AuthSession.accessToken,
+    onUnauthorized: () {
+      if (AuthSession.isLoggedIn) {
+        ref.read(authProvider.notifier).logout();
+      }
+    },
   );
   ref.onDispose(client.close);
   return client;

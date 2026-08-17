@@ -28,4 +28,24 @@ void main() {
     expect(seenUserId, 'user_test_abc');
     client.close();
   });
+
+  test('ApiClient invokes onUnauthorized for 401 responses', () async {
+    int unauthorizedCalls = 0;
+    final MockClient mock = MockClient((http.Request request) async {
+      return http.Response('{"detail":"Invalid or expired token"}', 401);
+    });
+
+    final ApiClient client = ApiClient(
+      baseUrl: 'http://localhost:8000',
+      httpClient: mock,
+      onUnauthorized: () => unauthorizedCalls += 1,
+    );
+
+    await expectLater(
+      client.getJson('/experiences'),
+      throwsA(isA<ApiException>()),
+    );
+    expect(unauthorizedCalls, 1);
+    client.close();
+  });
 }

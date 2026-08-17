@@ -252,6 +252,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(label: 'Pinecone', value: data.pineconeLabel),
                           const Divider(height: 22, color: AppColors.outlineVariant),
+                          _InfoRow(label: '서버 인증', value: data.authRequiredLabel),
+                          const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(label: '임베딩', value: data.embeddingLabel),
                           const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(

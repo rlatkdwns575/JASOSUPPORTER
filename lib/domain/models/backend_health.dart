@@ -72,4 +72,6 @@ class BackendHealth {
     final String dim = embeddingDimension?.toString() ?? '-';
     return '$model · $dim차원';
   }
+
+  String get authRequiredLabel => authRequired ? 'JWT 필수' : 'Soft ID 허용';
 }

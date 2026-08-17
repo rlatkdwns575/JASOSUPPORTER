@@ -99,3 +99,12 @@ def test_health_includes_auth_flag(client: TestClient) -> None:
     health = client.get("/health")
     assert health.status_code == 200
     assert "authRequired" in health.json()
+
+
+def test_invalid_bearer_token_returns_401(client: TestClient) -> None:
+    response = client.get(
+        "/experiences",
+        headers={"Authorization": "Bearer invalid-token"},
+    )
+    assert response.status_code == 401
+    assert "Invalid or expired token" in response.json()["detail"]

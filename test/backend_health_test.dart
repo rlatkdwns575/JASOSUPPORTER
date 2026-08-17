@@ -20,5 +20,17 @@ void main() {
     expect(health.embeddingDimension, 512);
     expect(health.statusLabel, '연결됨 (Pinecone 차원 불일치)');
     expect(health.embeddingLabel, contains('512'));
+    expect(health.authRequiredLabel, 'Soft ID 허용');
+  });
+
+  test('BackendHealth authRequiredLabel reflects server mode', () {
+    final BackendHealth strict = BackendHealth.fromJson(<String, dynamic>{
+      'status': 'ok',
+      'gemini': true,
+      'pinecone': true,
+      'authRequired': true,
+      'pineconeDimensionMismatch': false,
+    });
+    expect(strict.authRequiredLabel, 'JWT 필수');
   });
 }

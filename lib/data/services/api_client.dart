@@ -17,6 +17,7 @@ class ApiClient {
     String? userId,
     String? accessToken,
     http.Client? httpClient,
+    this.onUnauthorized,
   })  : baseUrl = baseUrl ?? AppConfig.apiBaseUrl,
         userId = userId ?? AuthSession.userId ?? UserIdentity.forRequest,
         accessToken = accessToken ?? AuthSession.accessToken,
@@ -25,6 +26,7 @@ class ApiClient {
   final String baseUrl;
   final String userId;
   final String? accessToken;
+  final void Function()? onUnauthorized;
   final http.Client _client;
 
   Map<String, String> _headers({bool jsonBody = false, bool sse = false}) {
@@ -117,6 +119,9 @@ class ApiClient {
   }
 
   void _ensureOk(int statusCode, String body) {
+    if (statusCode == 401) {
+      onUnauthorized?.call();
+    }
     if (statusCode < 200 || statusCode >= 300) {
       throw ApiException(statusCode, body);
     }
