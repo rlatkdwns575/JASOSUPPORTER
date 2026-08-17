@@ -1,4 +1,6 @@
+import 'package:chatgptmini/data/providers/attachment_session_provider.dart';
 import 'package:chatgptmini/data/providers/career_providers.dart';
+import 'package:chatgptmini/data/providers/career_draft_provider.dart';
 import 'package:chatgptmini/data/providers/chat_session_provider.dart';
 import 'package:chatgptmini/data/providers/gemini_models_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,4 +16,6 @@ void refreshUserSessionData(Ref ref) {
   ref.invalidate(essayVersionCountsProvider);
   ref.invalidate(geminiModelsCatalogProvider);
   ref.invalidate(chatSessionProvider);
+  ref.invalidate(careerDraftProvider);
+  ref.invalidate(attachmentSessionProvider);
 }

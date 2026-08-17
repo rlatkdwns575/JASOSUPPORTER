@@ -12,7 +12,7 @@ Flutter (Riverpod)
   → FastAPI
        ├─ Auth (JWT register/login)
        ├─ SQLite / PostgreSQL (career_documents + auth_users + chat rooms)
-       ├─ Gemini (생성·임베딩)
+       ├─ Gemini (google-genai: 생성·임베딩)
        └─ Pinecone (선택 RAG) + 키워드 rerank
 ```
 
@@ -73,7 +73,7 @@ python -m eval.generation_eval
 | `POST /chat` | AI SSE (공식) |
 | `GET/POST/DELETE /chat-rooms` | 코치 대화 영속화 |
 | `POST /essay/draft\|full-review` | `/chat` 편의 래퍼 |
-| `GET /health`, `/models` | 헬스·모델 목록 |
+| `GET /health`, `/models` | 헬스(embedding 차원·SDK)·모델 목록 |
 
 `AUTH_REQUIRED=true`이면 Bearer 토큰이 필수입니다. 기본값은 `false`(개발 폴백).
 

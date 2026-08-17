@@ -39,7 +39,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     super.dispose();
   }
 
-  Future<void> _runAuth(Future<void> Function() action) async {
+  Future<void> _runAuth(
+    Future<void> Function() action, {
+    required String successMessage,
+  }) async {
     setState(() {
       _busy = true;
       _authError = null;
@@ -48,7 +51,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       await action();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('로그인되었습니다.')),
+          SnackBar(content: Text(successMessage)),
         );
       }
     } catch (e) {
@@ -57,6 +60,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       if (mounted) {
         setState(() => _busy = false);
       }
+    }
+  }
+
+  Future<void> _logout() async {
+    setState(() => _busy = true);
+    await ref.read(authProvider.notifier).logout();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('로그아웃되었습니다.')),
+      );
+      setState(() => _busy = false);
     }
   }
 
@@ -94,9 +108,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: OutlinedButton.icon(
-                          onPressed: _busy
-                              ? null
-                              : () => ref.read(authProvider.notifier).logout(),
+                          onPressed: _busy ? null : _logout,
                           icon: const Icon(Icons.logout, size: 18),
                           label: const Text('로그아웃'),
                         ),
@@ -141,6 +153,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                             _email.text,
                                             _password.text,
                                           ),
+                                      successMessage: '로그인되었습니다.',
                                     ),
                             child: const Text('로그인'),
                           ),
@@ -152,6 +165,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                             _email.text,
                                             _password.text,
                                           ),
+                                      successMessage: '회원가입 및 로그인되었습니다.',
                                     ),
                             child: const Text('회원가입'),
                           ),
