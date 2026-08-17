@@ -55,6 +55,8 @@ flutter run --dart-define=API_BASE_URL=http://localhost:8000
 
 ### 검증
 
+로컬:
+
 ```bash
 flutter analyze
 flutter test
@@ -62,6 +64,8 @@ cd backend && pytest
 python -m eval.rag_eval
 python -m eval.generation_eval
 ```
+
+`main` 브랜치 push/PR 시 GitHub Actions(`.github/workflows/ci.yml`)에서 Flutter analyze·test와 backend pytest·generation eval을 실행합니다.
 
 ## 주요 API
 

@@ -2,6 +2,7 @@ import 'package:chatgptmini/core/config/app_config.dart';
 import 'package:chatgptmini/core/config/user_identity.dart';
 import 'package:chatgptmini/core/theme/app_colors.dart';
 import 'package:chatgptmini/core/utils/api_error_message.dart';
+import 'package:chatgptmini/core/utils/auth_form_validator.dart';
 import 'package:chatgptmini/core/utils/string_extensions.dart';
 import 'package:chatgptmini/core/widgets/app_components.dart';
 import 'package:chatgptmini/data/providers/auth_provider.dart';
@@ -77,9 +78,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  bool _validatePassword() {
-    if (_password.text.trim().length < 8) {
-      setState(() => _authError = '비밀번호는 8자 이상이어야 합니다.');
+  bool _validateCredentials() {
+    final String? error = AuthFormValidator.credentials(
+      emailValue: _email.text,
+      passwordValue: _password.text,
+    );
+    if (error != null) {
+      setState(() => _authError = error);
       return false;
     }
     return true;
@@ -161,7 +166,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             onPressed: _busy
                                 ? null
                                 : () {
-                                    if (!_validatePassword()) {
+                                    if (!_validateCredentials()) {
                                       return;
                                     }
                                     _runAuth(
@@ -178,7 +183,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             onPressed: _busy
                                 ? null
                                 : () {
-                                    if (!_validatePassword()) {
+                                    if (!_validateCredentials()) {
                                       return;
                                     }
                                     _runAuth(

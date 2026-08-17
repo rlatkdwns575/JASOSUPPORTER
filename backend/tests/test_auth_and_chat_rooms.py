@@ -5,6 +5,14 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 
+def test_register_rejects_short_password(client: TestClient) -> None:
+    response = client.post(
+        "/auth/register",
+        json={"email": "short@example.com", "password": "1234567"},
+    )
+    assert response.status_code == 422
+
+
 def test_register_login_me(client: TestClient) -> None:
     register = client.post(
         "/auth/register",
