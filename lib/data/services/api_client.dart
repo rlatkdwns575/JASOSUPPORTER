@@ -29,6 +29,9 @@ class ApiClient {
   final void Function()? onUnauthorized;
   final http.Client _client;
 
+  static const Duration jsonTimeout = Duration(seconds: 20);
+  static const Duration connectTimeout = Duration(seconds: 30);
+
   Map<String, String> _headers({bool jsonBody = false, bool sse = false}) {
     final Map<String, String> headers = <String, String>{
       'Accept': sse ? 'text/event-stream' : 'application/json',
@@ -51,27 +54,33 @@ class ApiClient {
   }
 
   Future<dynamic> getJson(String path, {Map<String, String>? query}) async {
-    final http.Response response = await _client.get(
-      _uri(path, query),
-      headers: _headers(),
-    );
+    final http.Response response = await _client
+        .get(
+          _uri(path, query),
+          headers: _headers(),
+        )
+        .timeout(jsonTimeout);
     return _decode(response);
   }
 
   Future<dynamic> postJson(String path, Object body) async {
-    final http.Response response = await _client.post(
-      _uri(path),
-      headers: _headers(jsonBody: true),
-      body: jsonEncode(body),
-    );
+    final http.Response response = await _client
+        .post(
+          _uri(path),
+          headers: _headers(jsonBody: true),
+          body: jsonEncode(body),
+        )
+        .timeout(jsonTimeout);
     return _decode(response);
   }
 
   Future<void> delete(String path) async {
-    final http.Response response = await _client.delete(
-      _uri(path),
-      headers: _headers(),
-    );
+    final http.Response response = await _client
+        .delete(
+          _uri(path),
+          headers: _headers(),
+        )
+        .timeout(jsonTimeout);
     _ensureOk(response.statusCode, response.body);
   }
 
@@ -80,7 +89,8 @@ class ApiClient {
       ..headers.addAll(_headers(jsonBody: true, sse: true))
       ..body = jsonEncode(body);
 
-    final http.StreamedResponse response = await _client.send(request);
+    final http.StreamedResponse response =
+        await _client.send(request).timeout(connectTimeout);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final String errorBody = await response.stream.bytesToString();
       _ensureOk(response.statusCode, errorBody);

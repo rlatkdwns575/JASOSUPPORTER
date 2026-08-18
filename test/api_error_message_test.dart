@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/data/services/api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,5 +31,22 @@ void main() {
       ApiException(401, '{"detail":"이메일 또는 비밀번호가 올바르지 않습니다."}'),
     );
     expect(message, '이메일 또는 비밀번호가 올바르지 않습니다.');
+  });
+
+  test('apiErrorMessage maps timeout', () {
+    expect(
+      apiErrorMessage(TimeoutException('timed out')),
+      contains('지연'),
+    );
+  });
+
+  test('actionErrorMessage prefixes the translated cause', () {
+    expect(
+      actionErrorMessage(
+        '저장 실패',
+        ApiException(400, '{"detail":"이미 사용 중인 이메일입니다."}'),
+      ),
+      '저장 실패: 이미 사용 중인 이메일입니다.',
+    );
   });
 }

@@ -7,6 +7,7 @@ import 'package:chatgptmini/app/app_work_body.dart';
 import 'package:chatgptmini/app/career_shell_actions.dart';
 import 'package:chatgptmini/app/shell_action_result.dart';
 import 'package:chatgptmini/core/theme/app_colors.dart';
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/core/widgets/app_chat_coach_host.dart';
 import 'package:chatgptmini/core/widgets/chat_first_shell.dart';
 import 'package:chatgptmini/core/widgets/navigation_sidebar.dart';
@@ -319,7 +320,7 @@ class _ChatGptAppState extends ConsumerState<ChatGptApp> with TickerProviderStat
         _syncSendEnabled();
       }
     } catch (e) {
-      _snack('파일 선택 중 오류: $e');
+      _snack(actionErrorMessage('파일 선택 중 오류', e));
     }
   }
 

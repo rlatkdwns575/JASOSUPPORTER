@@ -134,6 +134,7 @@ class InterviewPrepPanel extends StatelessWidget {
             ),
             const SizedBox(height: 10),
           ],
+        const SizedBox(height: 28),
         SectionHeader(
           title: '저장된 면접 답변',
           icon: Icons.bookmark_outline,
@@ -142,7 +143,15 @@ class InterviewPrepPanel extends StatelessWidget {
           trailing: StatusPill(label: '${savedAnswers.length}개', color: AppColors.coaching),
         ),
         const SizedBox(height: 10),
-        for (final InterviewAnswer answer in savedAnswers) ...[
+        if (savedAnswers.isEmpty)
+          const AppCard(
+            child: Text(
+              '저장한 면접 답변이 없습니다. 예상 질문을 열어 초안을 작성한 뒤 저장하면 여기에 모입니다.',
+              style: TextStyle(fontSize: 13.5, height: 1.45, color: AppColors.onSurfaceVariant),
+            ),
+          )
+        else
+          for (final InterviewAnswer answer in savedAnswers) ...[
           Material(
             color: Colors.transparent,
             child: InkWell(

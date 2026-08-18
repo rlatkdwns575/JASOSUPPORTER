@@ -1,5 +1,6 @@
 import 'package:chatgptmini/app/app_routes.dart';
 import 'package:chatgptmini/app/shell_action_result.dart';
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/data/providers/career_draft_provider.dart';
 import 'package:chatgptmini/data/providers/career_providers.dart';
 import 'package:chatgptmini/data/providers/interview_questions_provider.dart';
@@ -60,7 +61,7 @@ class ChatSaveExecutor {
     } catch (e) {
       final String prefix =
           plan.errorMessagePrefix.isEmpty ? '저장 실패' : plan.errorMessagePrefix;
-      return ShellActionResult(snack: '$prefix: $e');
+      return ShellActionResult(snack: actionErrorMessage(prefix, e));
     }
   }
 }

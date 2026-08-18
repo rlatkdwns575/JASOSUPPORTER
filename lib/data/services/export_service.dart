@@ -3,6 +3,7 @@ import 'dart:io' show File, Directory;
 import 'dart:typed_data';
 
 import 'package:archive/archive.dart';
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -123,7 +124,7 @@ class ExportService {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("저장 실패: $e")),
+          SnackBar(content: Text(actionErrorMessage('저장 실패', e))),
         );
       }
     }

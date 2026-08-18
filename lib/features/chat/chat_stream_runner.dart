@@ -1,3 +1,4 @@
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/data/providers/chat_providers.dart';
 import 'package:chatgptmini/data/providers/chat_session_provider.dart';
 import 'package:chatgptmini/data/services/assistant_prompts.dart';
@@ -40,7 +41,7 @@ class ChatStreamRunner {
       }
       session.finishGenerating(
         mode,
-        errorText: '오류: $e',
+        errorText: actionErrorMessage('오류', e),
         assistantIndex: assistantIndex,
       );
     }

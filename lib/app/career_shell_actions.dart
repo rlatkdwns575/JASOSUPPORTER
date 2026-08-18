@@ -1,6 +1,7 @@
 import 'package:chatgptmini/app/app_routes.dart';
 import 'package:chatgptmini/app/shell_action_result.dart';
 import 'package:chatgptmini/core/constants/jaso_constants.dart';
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/data/providers/career_draft_provider.dart';
 import 'package:chatgptmini/data/providers/career_providers.dart';
 import 'package:chatgptmini/domain/models/career_artifacts.dart';
@@ -23,7 +24,7 @@ class CareerShellActions {
       await ref.read(experiencesProvider.notifier).save(experience);
       return const ShellActionResult(snack: '경험 카드를 저장했습니다.');
     } catch (e) {
-      return ShellActionResult(snack: '경험 카드 저장 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('경험 카드 저장 실패', e));
     }
   }
 
@@ -32,7 +33,7 @@ class CareerShellActions {
       await ref.read(experiencesProvider.notifier).delete(id);
       return const ShellActionResult(snack: '경험 카드를 삭제했습니다.');
     } catch (e) {
-      return ShellActionResult(snack: '경험 카드 삭제 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('경험 카드 삭제 실패', e));
     }
   }
 
@@ -45,7 +46,7 @@ class CareerShellActions {
       await ref.read(specItemsProvider.notifier).delete(id);
       return const ShellActionResult(snack: '스펙을 삭제했습니다.');
     } catch (e) {
-      return ShellActionResult(snack: '스펙 삭제 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('스펙 삭제 실패', e));
     }
   }
 
@@ -76,7 +77,7 @@ class CareerShellActions {
       ref.read(careerDraftProvider.notifier).markSaved();
       return const ShellActionResult(navigateTo: AppRoutes.experienceComplete);
     } catch (e) {
-      return ShellActionResult(snack: '경험 카드 저장 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('경험 카드 저장 실패', e));
     }
   }
 
@@ -121,7 +122,7 @@ class CareerShellActions {
         navigateTo: AppRoutes.interview,
       );
     } catch (e) {
-      return ShellActionResult(snack: '면접 답변 저장 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('면접 답변 저장 실패', e));
     }
   }
 
@@ -133,7 +134,7 @@ class CareerShellActions {
         navigateTo: navigateHome ? AppRoutes.interview : null,
       );
     } catch (e) {
-      return ShellActionResult(snack: '면접 답변 삭제 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('면접 답변 삭제 실패', e));
     }
   }
 
@@ -157,7 +158,7 @@ class CareerShellActions {
           );
       return ShellActionResult(snack: '$questionId 자소서 버전을 저장했습니다.');
     } catch (e) {
-      return ShellActionResult(snack: '자소서 버전 저장 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('자소서 버전 저장 실패', e));
     }
   }
 
@@ -174,7 +175,7 @@ class CareerShellActions {
       await ref.read(essayVersionCountsProvider.notifier).deleteVersion(versionId);
       return const ShellActionResult(snack: '자소서 버전을 삭제했습니다.');
     } catch (e) {
-      return ShellActionResult(snack: '자소서 버전 삭제 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('자소서 버전 삭제 실패', e));
     }
   }
 
@@ -185,7 +186,7 @@ class CareerShellActions {
       await ref.read(essayVersionCountsProvider.notifier).deleteMasterEssayForTab(tabIndex);
       return ShellActionResult(snack: '$questionId 자소서와 버전을 삭제했습니다.');
     } catch (e) {
-      return ShellActionResult(snack: '자소서 삭제 실패: $e');
+      return ShellActionResult(snack: actionErrorMessage('자소서 삭제 실패', e));
     }
   }
 }

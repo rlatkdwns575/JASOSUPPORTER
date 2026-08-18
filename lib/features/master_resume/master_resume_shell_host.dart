@@ -1,5 +1,6 @@
 import 'package:chatgptmini/app/career_shell_actions.dart';
 import 'package:chatgptmini/app/shell_action_result.dart';
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/core/utils/prompt_send.dart';
 import 'package:chatgptmini/data/providers/career_providers.dart';
 import 'package:chatgptmini/data/providers/chat_providers.dart';
@@ -144,7 +145,7 @@ class MasterResumeShellHost extends ConsumerWidget {
           onSnack('저장된 버전을 불러왔습니다.');
           return selected.sourceExperienceIds;
         } catch (e) {
-          onSnack('자소서 버전 불러오기 실패: $e');
+          onSnack(actionErrorMessage('자소서 버전 불러오기 실패', e));
           return null;
         }
       },

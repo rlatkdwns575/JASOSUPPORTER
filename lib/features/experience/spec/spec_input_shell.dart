@@ -1,4 +1,5 @@
 import 'package:chatgptmini/app/app_routes.dart';
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/data/providers/career_providers.dart';
 import 'package:chatgptmini/domain/models/spec_item.dart';
 import 'package:chatgptmini/features/experience/experience_input_chrome.dart';
@@ -74,7 +75,7 @@ class _SpecInputShellState extends ConsumerState<SpecInputShell> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('저장 실패: $e')),
+        SnackBar(content: Text(actionErrorMessage('저장 실패', e))),
       );
     } finally {
       if (mounted) {

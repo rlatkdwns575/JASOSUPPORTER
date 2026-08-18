@@ -12,6 +12,8 @@ from .logging_config import get_logger
 
 logger = get_logger("observability")
 
+_SKIP_LOG_PATHS = frozenset({"/health", "/favicon.ico"})
+
 
 class ObservabilityMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next) -> Response:
@@ -25,11 +27,12 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
             logger.exception("unhandled error path=%s", request.url.path)
             raise
         finally:
-            elapsed_ms = (time.perf_counter() - started) * 1000
-            logger.info(
-                "request method=%s path=%s status=%s latency_ms=%.1f",
-                request.method,
-                request.url.path,
-                status_code,
-                elapsed_ms,
-            )
+            if request.url.path not in _SKIP_LOG_PATHS:
+                elapsed_ms = (time.perf_counter() - started) * 1000
+                logger.info(
+                    "request method=%s path=%s status=%s latency_ms=%.1f",
+                    request.method,
+                    request.url.path,
+                    status_code,
+                    elapsed_ms,
+                )

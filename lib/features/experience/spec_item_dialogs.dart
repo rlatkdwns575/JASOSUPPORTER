@@ -1,3 +1,4 @@
+import 'package:chatgptmini/core/utils/api_error_message.dart';
 import 'package:chatgptmini/domain/models/spec_item.dart';
 import 'package:flutter/material.dart';
 
@@ -83,7 +84,7 @@ class _SpecItemEditorDialogState extends State<_SpecItemEditorDialog> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('저장 실패: $e')),
+          SnackBar(content: Text(actionErrorMessage('저장 실패', e))),
         );
       }
     } finally {
