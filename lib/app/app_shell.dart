@@ -40,6 +40,7 @@ import 'package:chatgptmini/features/experience/experience_hub_panel.dart';
 import 'package:chatgptmini/features/experience/experience_shell_host.dart';
 import 'package:chatgptmini/features/experience/experience_subtype.dart';
 import 'package:chatgptmini/features/experience/spec_item_dialogs.dart';
+import 'package:chatgptmini/features/home/career_data_error_banner.dart';
 import 'package:chatgptmini/features/interview/interview_shell_host.dart';
 import 'package:chatgptmini/features/interview/interview_workspace_controller.dart';
 import 'package:chatgptmini/features/master_resume/master_essay_prompt_planner.dart';
@@ -582,7 +583,13 @@ class _ChatGptAppState extends ConsumerState<ChatGptApp> with TickerProviderStat
   Widget _buildSectionContent(BuildContext context) {
     final bool settingsMuted = _section == AppSection.settings;
     return ChatFirstShell(
-      workBody: _buildWorkBody(context),
+      workBody: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const CareerDataErrorBanner(),
+          Expanded(child: _buildWorkBody(context)),
+        ],
+      ),
       coachPanel: AppChatCoachHost(
         mode: _mode,
         muted: settingsMuted,

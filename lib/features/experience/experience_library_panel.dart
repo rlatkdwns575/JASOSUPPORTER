@@ -87,9 +87,9 @@ class _ExperienceLibraryPanelState extends State<ExperienceLibraryPanel> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 24),
           const Divider(height: 1, color: AppColors.outlineVariant),
-          const SizedBox(height: 10),
+          const SizedBox(height: 16),
           Row(
             children: [
               Expanded(

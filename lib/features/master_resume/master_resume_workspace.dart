@@ -469,9 +469,9 @@ class _MasterResumeWorkspaceState extends ConsumerState<MasterResumeWorkspace> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           _buildQuestionExperienceSelector(i),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
           AppCard(
             padding: const EdgeInsets.all(12),
             backgroundColor: AppColors.surfaceContainerLowest,
@@ -499,7 +499,7 @@ class _MasterResumeWorkspaceState extends ConsumerState<MasterResumeWorkspace> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           ActionBar(
             children: [
               TextButton.icon(
@@ -604,7 +604,7 @@ class _MasterResumeWorkspaceState extends ConsumerState<MasterResumeWorkspace> {
             ),
           ),
           if (widget.availableExperiences.isNotEmpty) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             AppCard(
               padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
               backgroundColor: AppColors.surfaceContainerLowest,
@@ -637,7 +637,7 @@ class _MasterResumeWorkspaceState extends ConsumerState<MasterResumeWorkspace> {
               ),
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           AppCard(
             padding: const EdgeInsets.all(12),
             backgroundColor: AppColors.surfaceContainerLowest,
@@ -665,7 +665,7 @@ class _MasterResumeWorkspaceState extends ConsumerState<MasterResumeWorkspace> {
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 20),
           ActionBar(
             children: [
               TextButton.icon(
