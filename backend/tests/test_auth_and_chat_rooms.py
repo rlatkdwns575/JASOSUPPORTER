@@ -108,3 +108,31 @@ def test_invalid_bearer_token_returns_401(client: TestClient) -> None:
     )
     assert response.status_code == 401
     assert "Invalid or expired token" in response.json()["detail"]
+
+
+def test_auth_required_rejects_soft_identity(client: TestClient, monkeypatch) -> None:
+    from app.config import Settings
+
+    monkeypatch.setattr(
+        "app.deps.get_settings",
+        lambda: Settings(auth_required=True, jwt_secret="production-secret-value"),
+    )
+    response = client.get("/experiences", headers={"X-User-Id": "pytest-user"})
+    assert response.status_code == 401
+    assert "Bearer" in response.json()["detail"]
+
+
+def test_auth_required_accepts_bearer(client: TestClient, monkeypatch) -> None:
+    from app.config import Settings
+
+    monkeypatch.setattr(
+        "app.deps.get_settings",
+        lambda: Settings(auth_required=True, jwt_secret="production-secret-value"),
+    )
+    token = client.post(
+        "/auth/register",
+        json={"email": "strict@example.com", "password": "password123"},
+    ).json()["access_token"]
+    listed = client.get("/experiences", headers={"Authorization": f"Bearer {token}"})
+    assert listed.status_code == 200
+    assert listed.json() == []

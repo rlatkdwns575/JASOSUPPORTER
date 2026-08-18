@@ -34,6 +34,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final TextEditingController _email = TextEditingController();
   final TextEditingController _password = TextEditingController();
   bool _busy = false;
+  bool _obscurePassword = true;
   String? _authError;
 
   @override
@@ -90,6 +91,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     return true;
   }
 
+  void _submitLogin() {
+    if (_busy || !_validateCredentials()) {
+      return;
+    }
+    _runAuth(
+      () => ref.read(authProvider.notifier).login(
+            _email.text,
+            _password.text,
+          ),
+      successMessage: '로그인되었습니다.',
+    );
+  }
+
+  void _submitRegister() {
+    if (_busy || !_validateCredentials()) {
+      return;
+    }
+    _runAuth(
+      () => ref.read(authProvider.notifier).register(
+            _email.text,
+            _password.text,
+          ),
+      successMessage: '회원가입 및 로그인되었습니다.',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final AuthState auth = ref.watch(authProvider);
@@ -133,7 +160,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ] else ...[
                       TextField(
                         controller: _email,
+                        enabled: !_busy,
                         keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const <String>[AutofillHints.email],
                         decoration: const InputDecoration(
                           labelText: '이메일',
                           border: OutlineInputBorder(),
@@ -143,11 +173,27 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       const SizedBox(height: 10),
                       TextField(
                         controller: _password,
-                        obscureText: true,
-                        decoration: const InputDecoration(
+                        enabled: !_busy,
+                        obscureText: _obscurePassword,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const <String>[AutofillHints.password],
+                        onSubmitted: (_) => _submitLogin(),
+                        decoration: InputDecoration(
                           labelText: '비밀번호 (8자 이상)',
-                          border: OutlineInputBorder(),
+                          border: const OutlineInputBorder(),
                           isDense: true,
+                          suffixIcon: IconButton(
+                            tooltip: _obscurePassword ? '비밀번호 보기' : '비밀번호 숨기기',
+                            onPressed: () {
+                              setState(() => _obscurePassword = !_obscurePassword);
+                            },
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              size: 20,
+                            ),
+                          ),
                         ),
                       ),
                       if (_authError != null) ...[
@@ -163,44 +209,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         runSpacing: 8,
                         children: [
                           FilledButton(
-                            onPressed: _busy
-                                ? null
-                                : () {
-                                    if (!_validateCredentials()) {
-                                      return;
-                                    }
-                                    _runAuth(
-                                      () => ref.read(authProvider.notifier).login(
-                                            _email.text,
-                                            _password.text,
-                                          ),
-                                      successMessage: '로그인되었습니다.',
-                                    );
-                                  },
+                            onPressed: _busy ? null : _submitLogin,
                             child: const Text('로그인'),
                           ),
                           OutlinedButton(
-                            onPressed: _busy
-                                ? null
-                                : () {
-                                    if (!_validateCredentials()) {
-                                      return;
-                                    }
-                                    _runAuth(
-                                      () => ref.read(authProvider.notifier).register(
-                                            _email.text,
-                                            _password.text,
-                                          ),
-                                      successMessage: '회원가입 및 로그인되었습니다.',
-                                    );
-                                  },
+                            onPressed: _busy ? null : _submitRegister,
                             child: const Text('회원가입'),
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        '로그인하지 않으면 개발용 로컬 User ID로 요청합니다.'.softWrapWords(),
+                        AuthFormValidator.loginHint(
+                          authRequired: health.maybeWhen(
+                            data: (BackendHealth data) => data.authRequired,
+                            orElse: () => false,
+                          ),
+                        ).softWrapWords(),
                         style: const TextStyle(
                           fontSize: 12.5,
                           color: AppColors.onSurfaceVariant,

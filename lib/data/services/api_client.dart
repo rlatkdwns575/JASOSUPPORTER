@@ -83,7 +83,7 @@ class ApiClient {
     final http.StreamedResponse response = await _client.send(request);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final String errorBody = await response.stream.bytesToString();
-      throw ApiException(response.statusCode, errorBody);
+      _ensureOk(response.statusCode, errorBody);
     }
 
     final Stream<String> lines =

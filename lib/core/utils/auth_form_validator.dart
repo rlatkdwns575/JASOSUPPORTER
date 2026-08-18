@@ -27,4 +27,11 @@ class AuthFormValidator {
   static String? credentials({required String emailValue, required String passwordValue}) {
     return email(emailValue) ?? password(passwordValue);
   }
+
+  static String loginHint({required bool authRequired}) {
+    if (authRequired) {
+      return '이 서버는 JWT 로그인이 필요합니다.';
+    }
+    return '로그인하지 않으면 개발용 로컬 User ID로 요청합니다.';
+  }
 }

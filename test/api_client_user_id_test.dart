@@ -48,4 +48,24 @@ void main() {
     expect(unauthorizedCalls, 1);
     client.close();
   });
+
+  test('ApiClient streamSse invokes onUnauthorized for 401 responses', () async {
+    int unauthorizedCalls = 0;
+    final MockClient mock = MockClient((http.Request request) async {
+      return http.Response('{"detail":"Authorization Bearer token required"}', 401);
+    });
+
+    final ApiClient client = ApiClient(
+      baseUrl: 'http://localhost:8000',
+      httpClient: mock,
+      onUnauthorized: () => unauthorizedCalls += 1,
+    );
+
+    await expectLater(
+      client.streamSse('/chat', <String, Object?>{}).toList(),
+      throwsA(isA<ApiException>()),
+    );
+    expect(unauthorizedCalls, 1);
+    client.close();
+  });
 }

@@ -24,4 +24,9 @@ void main() {
       contains('8자'),
     );
   });
+
+  test('loginHint reflects server auth mode', () {
+    expect(AuthFormValidator.loginHint(authRequired: false), contains('로컬 User ID'));
+    expect(AuthFormValidator.loginHint(authRequired: true), contains('JWT'));
+  });
 }
