@@ -69,7 +69,7 @@ class InterviewQuestionDetailPanel extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 16),
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -96,7 +96,7 @@ class InterviewQuestionDetailPanel extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -190,7 +190,7 @@ class InterviewAnswerDefendPanel extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 24),
         Wrap(
           spacing: 8,
           runSpacing: 8,

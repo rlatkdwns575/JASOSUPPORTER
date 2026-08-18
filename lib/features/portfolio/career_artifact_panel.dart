@@ -74,9 +74,9 @@ class CareerArtifactPanel extends StatelessWidget {
               ],
             ),
           ],
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           const Divider(height: 1, color: AppColors.outlineVariant),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           if (portfolioProjects.isEmpty)
             _emptyBox(Icons.layers_outlined, "저장된 포트폴리오 프로젝트가 없습니다.")
           else
@@ -117,9 +117,9 @@ class CareerArtifactPanel extends StatelessWidget {
               label: const Text("지원 기록 추가"),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           const Divider(height: 1, color: AppColors.outlineVariant),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           if (applicationRecords.isEmpty)
             _emptyBox(Icons.work_outline, "저장된 지원 기록이 없습니다.")
           else

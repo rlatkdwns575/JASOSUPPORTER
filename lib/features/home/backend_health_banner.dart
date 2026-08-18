@@ -59,8 +59,10 @@ class BackendHealthBanner extends ConsumerWidget {
                 ),
               ),
               TextButton(
-                onPressed: onOpenSettings ?? () {},
-                child: const Text('설정'),
+                onPressed: isError
+                    ? () => ref.invalidate(backendHealthProvider)
+                    : (onOpenSettings ?? () {}),
+                child: Text(isError ? '다시 시도' : '설정'),
               ),
             ],
           ),

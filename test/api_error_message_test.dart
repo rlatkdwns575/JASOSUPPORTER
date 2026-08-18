@@ -49,4 +49,11 @@ void main() {
       '저장 실패: 이미 사용 중인 이메일입니다.',
     );
   });
+
+  test('apiErrorMessage maps connection failures', () {
+    expect(
+      apiErrorMessage(Exception('ClientException: Connection refused')),
+      contains('서버에 연결할 수 없습니다'),
+    );
+  });
 }

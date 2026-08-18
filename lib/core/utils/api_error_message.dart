@@ -30,7 +30,20 @@ String apiErrorMessage(Object error) {
       // JSON 파싱 실패 시 아래 기본 메시지 사용
     }
   }
+  if (_isLikelyNetworkError(error)) {
+    return '서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인해 주세요.';
+  }
   return '요청에 실패했습니다. 잠시 후 다시 시도해 주세요.';
+}
+
+bool _isLikelyNetworkError(Object error) {
+  final String text = error.toString().toLowerCase();
+  return text.contains('socketexception') ||
+      text.contains('clientexception') ||
+      text.contains('failed host lookup') ||
+      text.contains('connection refused') ||
+      text.contains('connection reset') ||
+      text.contains('network is unreachable');
 }
 
 String _unauthorizedMessage(ApiException error) {
