@@ -27,13 +27,41 @@ When information is missing, AI should:
 
 AI should not silently fill missing details.
 
+## Two-Layer Model (Master Essay)
+
+Generated master-essay content has two layers. AI must keep them separate.
+
+### Fact layer (locked to Experience)
+
+Only use facts present in the user's Experience records:
+
+- Situation, task, action, result
+- Metrics, numbers, percentages, counts, durations
+- Organization, role, period
+- Tech stacks, tools, certifications explicitly listed
+
+Do not invent or infer new facts in this layer.
+
+### Meaning layer (AI may expand)
+
+On top of provided facts, AI should expand (without inventing new facts):
+
+- Which strengths the experience reveals
+- Insights and lessons grounded in the provided `learned` / competency tags
+- A deductive opening (core message first, then evidence)
+- Question-fit framing and differentiation vs generic applicants
+- Clearer structure and wording
+
+Do not produce "summary-only" output that merely paraphrases STAR fields. The essay should interpret and position the facts for the question.
+
 ## Allowed Transformations
 
 AI may:
 
 - Reorganize user-provided facts into STAR.
 - Rewrite Korean sentences for clarity.
-- Suggest stronger structure.
+- Suggest stronger structure and deductive (two-gak) openings.
+- Surface strengths, insights, and differentiation angles grounded in provided facts.
 - Recommend which provided experience fits which essay question.
 - Convert a project-like experience into portfolio copy.
 - Create interview answers using provided facts.
@@ -65,3 +93,4 @@ Prompt builders should include this instruction in relevant AI requests:
 - Are experience references preserved?
 - Is the answer in Korean unless otherwise requested?
 - Does the tone avoid overclaiming?
+- Does the essay expand meaning (strengths, insights, deductive opening) rather than only summarizing STAR?

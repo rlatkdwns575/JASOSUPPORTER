@@ -73,9 +73,12 @@ class CoachQuestionKind {
           const CoachQuestionKind(
             id: 'draft',
             label: '초안 생성',
-            hint: '선택 경험만 근거로 현재 문항 초안을 씁니다.',
+            hint: '선택 경험 사실만 근거로, 의미·표현은 확장해 초안을 씁니다.',
             promptTemplate:
-                '선택한 경험만 근거로 현재 문항 초안을 작성해 주세요. 없는 사실은 만들지 마세요.',
+                '선택한 경험만 근거로 현재 문항 초안을 작성해 주세요. '
+                '행동·결과·수치 등 사실은 Experience에 있는 것만 쓰고, '
+                '강점·인사이트·두괄식 전개·차별화 관점은 사실 위에서 확장해 주세요. '
+                'STAR를 그대로 요약하지 마세요. 없는 사실은 만들지 마세요.',
           ),
           const CoachQuestionKind(
             id: 'review',
@@ -90,7 +93,10 @@ class CoachQuestionKind {
               hint: q.title,
               promptTemplate:
                   '[${q.id} 초안 작성 요청]\n${q.body}\n'
-                  '선택한 경험만 근거로 초안을 작성해 주세요. 없는 사실은 만들지 마세요. '
+                  '선택한 경험만 근거로 초안을 작성해 주세요. '
+                  '사실(행동·결과·수치)은 Experience에 있는 것만 쓰고, '
+                  '강점·인사이트·두괄식·차별화는 사실 위에서 확장해 주세요. '
+                  'STAR 요약-only는 피하세요. 없는 사실은 만들지 마세요. '
                   '글자 수 목표: ${q.charHint}',
             ),
         ];

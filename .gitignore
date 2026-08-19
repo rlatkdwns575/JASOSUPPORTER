@@ -47,3 +47,6 @@ app.*.map.json
 # private
 .env
 assets/.env
+
+# eval live reports (local baseline)
+backend/eval/reports/

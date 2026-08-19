@@ -24,7 +24,7 @@ class ChatSaveExecutor {
     try {
       switch (plan.kind) {
         case ChatSaveKind.masterEssayVersion:
-          return saveMasterEssayVersion(plan.masterTabIndex, plan.text);
+          return await saveMasterEssayVersion(plan.masterTabIndex, plan.text);
         case ChatSaveKind.interviewAnswer:
           await ref
               .read(interviewAnswersProvider.notifier)
