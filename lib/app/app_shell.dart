@@ -41,6 +41,7 @@ import 'package:chatgptmini/features/experience/experience_shell_host.dart';
 import 'package:chatgptmini/features/experience/experience_subtype.dart';
 import 'package:chatgptmini/features/experience/spec_item_dialogs.dart';
 import 'package:chatgptmini/features/home/career_data_error_banner.dart';
+import 'package:chatgptmini/features/home/career_data_loading_banner.dart';
 import 'package:chatgptmini/features/interview/interview_shell_host.dart';
 import 'package:chatgptmini/features/interview/interview_workspace_controller.dart';
 import 'package:chatgptmini/features/master_resume/master_essay_prompt_planner.dart';
@@ -297,7 +298,14 @@ class _ChatGptAppState extends ConsumerState<ChatGptApp> with TickerProviderStat
         project: edit,
         availableExperiences: _savedExperiences,
         onSave: (PortfolioProject next) async {
-          await ref.read(portfolioProjectsProvider.notifier).save(next);
+          final ShellActionResult result =
+              await _careerActions.savePortfolioProject(next);
+          if (result.hasSnack) {
+            _snack(result.snack!);
+          }
+          if (result.isError) {
+            throw StateError(result.snack ?? '포트폴리오 개요 저장 실패');
+          }
         },
       );
     }
@@ -586,6 +594,7 @@ class _ChatGptAppState extends ConsumerState<ChatGptApp> with TickerProviderStat
       workBody: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const CareerDataLoadingBanner(),
           const CareerDataErrorBanner(),
           Expanded(child: _buildWorkBody(context)),
         ],

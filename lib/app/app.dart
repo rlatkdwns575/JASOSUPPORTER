@@ -1,4 +1,5 @@
 import 'package:chatgptmini/app/router.dart';
+import 'package:chatgptmini/app/session_bootstrap.dart';
 import 'package:chatgptmini/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,11 +11,13 @@ class JasoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ProviderScope(
-      child: MaterialApp.router(
-        title: 'JasoSupporter',
-        theme: AppTheme.light(),
-        routerConfig: appRouter,
-        debugShowCheckedModeBanner: false,
+      child: SessionBootstrap(
+        child: MaterialApp.router(
+          title: 'JasoSupporter',
+          theme: AppTheme.light(),
+          routerConfig: appRouter,
+          debugShowCheckedModeBanner: false,
+        ),
       ),
     );
   }

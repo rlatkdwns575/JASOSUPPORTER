@@ -82,36 +82,71 @@ class CareerShellActions {
   }
 
   Future<ShellActionResult> createPortfolioFromExperience(Experience experience) async {
-    final PortfolioProject project =
-        PortfolioProjectFactory.fromExperience(experience);
-    await ref.read(portfolioProjectsProvider.notifier).save(project);
-    return ShellActionResult(
-      snack: '포트폴리오 개요를 저장했습니다.',
-      navigateTo: AppRoutes.portfolio,
-      editPortfolio: project,
-    );
+    try {
+      final PortfolioProject project =
+          PortfolioProjectFactory.fromExperience(experience);
+      await ref.read(portfolioProjectsProvider.notifier).save(project);
+      return ShellActionResult(
+        snack: '포트폴리오 개요를 저장했습니다.',
+        navigateTo: AppRoutes.portfolio,
+        editPortfolio: project,
+      );
+    } catch (e) {
+      return ShellActionResult(
+        snack: actionErrorMessage('포트폴리오 개요 저장 실패', e),
+        isError: true,
+      );
+    }
   }
 
   Future<ShellActionResult> deletePortfolioProject(String id) async {
-    await ref.read(portfolioProjectsProvider.notifier).delete(id);
-    return const ShellActionResult(snack: '포트폴리오 프로젝트를 삭제했습니다.');
+    try {
+      await ref.read(portfolioProjectsProvider.notifier).delete(id);
+      return const ShellActionResult(snack: '포트폴리오 프로젝트를 삭제했습니다.');
+    } catch (e) {
+      return ShellActionResult(
+        snack: actionErrorMessage('포트폴리오 프로젝트 삭제 실패', e),
+        isError: true,
+      );
+    }
   }
 
   Future<ShellActionResult> savePortfolioProject(PortfolioProject project) async {
-    await ref.read(portfolioProjectsProvider.notifier).save(project);
-    return const ShellActionResult(snack: '포트폴리오 개요를 저장했습니다.');
+    try {
+      await ref.read(portfolioProjectsProvider.notifier).save(project);
+      return const ShellActionResult(snack: '포트폴리오 개요를 저장했습니다.');
+    } catch (e) {
+      return ShellActionResult(
+        snack: actionErrorMessage('포트폴리오 개요 저장 실패', e),
+        isError: true,
+      );
+    }
   }
 
   Future<ShellActionResult> saveApplicationRecord(ApplicationRecord record, {required bool isEdit}) async {
-    await ref.read(applicationRecordsProvider.notifier).save(record);
-    return ShellActionResult(
-      snack: isEdit ? '지원 기록을 수정했습니다.' : '지원 기록을 저장했습니다.',
-    );
+    try {
+      await ref.read(applicationRecordsProvider.notifier).save(record);
+      return ShellActionResult(
+        snack: isEdit ? '지원 기록을 수정했습니다.' : '지원 기록을 저장했습니다.',
+      );
+    } catch (e) {
+      return ShellActionResult(
+        snack: actionErrorMessage(isEdit ? '지원 기록 수정 실패' : '지원 기록 저장 실패', e),
+        isError: true,
+      );
+    }
   }
 
   Future<ShellActionResult> deleteApplicationRecord(String id) async {
-    await ref.read(applicationRecordsProvider.notifier).delete(id);
-    return const ShellActionResult(snack: '지원 기록을 삭제했습니다.');
+    try {
+      await ref.read(applicationRecordsProvider.notifier).delete(id);
+      return const ShellActionResult(snack: '지원 기록을 삭제했습니다.');
+    } catch (e) {
+      return ShellActionResult(
+        snack: actionErrorMessage('지원 기록 삭제 실패', e),
+        isError: true,
+      );
+    }
   }
 
   Future<ShellActionResult> saveInterviewAnswer(InterviewAnswer answer) async {

@@ -64,7 +64,11 @@ class PortfolioShellHost extends ConsumerWidget {
       project: project,
       availableExperiences: experiences,
       onSave: (PortfolioProject next) async {
-        onApplyResult(await actions.savePortfolioProject(next));
+        final ShellActionResult result = await actions.savePortfolioProject(next);
+        onApplyResult(result);
+        if (result.isError) {
+          throw StateError(result.snack ?? '포트폴리오 개요 저장 실패');
+        }
       },
     );
   }
@@ -85,7 +89,12 @@ class PortfolioShellHost extends ConsumerWidget {
       essayVersions: essayVersions,
       interviewAnswers: interviewAnswers,
       onSave: (ApplicationRecord record) async {
-        onApplyResult(await actions.saveApplicationRecord(record, isEdit: false));
+        final ShellActionResult result =
+            await actions.saveApplicationRecord(record, isEdit: false);
+        onApplyResult(result);
+        if (result.isError) {
+          throw StateError(result.snack ?? '지원 기록 저장 실패');
+        }
       },
     );
   }
@@ -108,7 +117,12 @@ class PortfolioShellHost extends ConsumerWidget {
       essayVersions: essayVersions,
       interviewAnswers: interviewAnswers,
       onSave: (ApplicationRecord next) async {
-        onApplyResult(await actions.saveApplicationRecord(next, isEdit: true));
+        final ShellActionResult result =
+            await actions.saveApplicationRecord(next, isEdit: true);
+        onApplyResult(result);
+        if (result.isError) {
+          throw StateError(result.snack ?? '지원 기록 수정 실패');
+        }
       },
     );
   }

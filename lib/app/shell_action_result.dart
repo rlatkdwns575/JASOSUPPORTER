@@ -7,17 +7,20 @@ class ShellActionResult {
     this.navigateTo,
     this.cancelled = false,
     this.editPortfolio,
+    this.isError = false,
   });
 
   const ShellActionResult.cancelled()
       : snack = null,
         navigateTo = null,
         cancelled = true,
-        editPortfolio = null;
+        editPortfolio = null,
+        isError = false;
 
   final String? snack;
   final String? navigateTo;
   final bool cancelled;
+  final bool isError;
 
   /// 저장 직후 개요 편집기를 열 포트폴리오 프로젝트.
   final PortfolioProject? editPortfolio;

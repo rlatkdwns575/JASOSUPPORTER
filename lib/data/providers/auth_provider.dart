@@ -1,5 +1,6 @@
 import 'package:chatgptmini/core/config/auth_session.dart';
 import 'package:chatgptmini/core/config/user_identity.dart';
+import 'package:chatgptmini/data/providers/gemini_models_provider.dart';
 import 'package:chatgptmini/data/providers/session_lifecycle.dart';
 import 'package:chatgptmini/data/services/api_client.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,6 +61,32 @@ class AuthNotifier extends Notifier<AuthState> {
       userId: UserIdentity.forRequest,
     );
     refreshUserSessionData(ref);
+  }
+
+  /// 앱 시작 시 저장된 JWT가 유효한지 확인한다. 네트워크 오류는 세션을 유지한다.
+  Future<void> validateStoredSession() async {
+    if (!AuthSession.isLoggedIn) {
+      return;
+    }
+    try {
+      final Object raw = await ref.read(apiClientProvider).getJson('/auth/me');
+      if (raw is! Map) {
+        return;
+      }
+      if ('${raw['auth'] ?? ''}' != 'jwt') {
+        await logout();
+        return;
+      }
+      final String email = '${raw['email'] ?? ''}'.trim();
+      final String id = '${raw['user_id'] ?? ''}'.trim();
+      if (email.isNotEmpty && id.isNotEmpty) {
+        state = AuthState(isLoggedIn: true, email: email, userId: id);
+      }
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) {
+        await logout();
+      }
+    }
   }
 
   Future<void> _applyTokenResponse(Object raw) async {
