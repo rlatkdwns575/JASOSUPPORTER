@@ -67,11 +67,27 @@ def _facts_from_metadata(metadata: dict) -> str:
     return f"{header}\n{text}" if text else header
 
 
+def build_selected_experience_context(
+    *,
+    user_id: str,
+    selected_experience_ids: list[str],
+) -> str:
+    """선택 경험만 주입한다. eval·테스트처럼 Pinecone/임베딩 없이 사실 블록만 필요할 때."""
+    if not selected_experience_ids:
+        return ""
+    selected_docs = store.get_many(store.KIND_EXPERIENCE, user_id, selected_experience_ids)
+    if not selected_docs:
+        return ""
+    facts = [_experience_facts(Experience.model_validate(doc)) for doc in selected_docs]
+    return "[선택한 Experience 카드 — 사실만 인용할 것]\n" + "\n".join(facts)
+
+
 def build_experience_context(
     *,
     user_id: str,
     query: str,
     selected_experience_ids: list[str],
+    skip_vector_search: bool = False,
 ) -> str:
     settings = get_settings()
     blocks: list[str] = []
@@ -88,7 +104,7 @@ def build_experience_context(
     # 2) Pinecone 유사도 검색 (발견 주입)
     retrieved: list[str] = []
     query_text = (query or "").strip()
-    if query_text:
+    if query_text and not skip_vector_search:
         vector = embedding.embed_text(query_text, is_query=True)
         if vector is not None and pinecone_service.is_enabled():
             # 여유분 조회 후 재정렬

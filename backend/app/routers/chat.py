@@ -1,4 +1,4 @@
-"""RAG 채팅 엔드포인트. 서버에서 시스템 프롬프트 + RAG 컨텍스트를 조립해 Gemini 스트리밍을 SSE 로 중계한다."""
+"""RAG 채팅 엔드포인트. 서버에서 시스템 프롬프트 + RAG 컨텍스트를 조립해 LLM 스트리밍을 SSE 로 중계한다."""
 
 import base64
 import json
@@ -10,7 +10,9 @@ from fastapi.responses import StreamingResponse
 from ..config import get_settings
 from ..deps import get_user_id
 from ..models import ChatMessageIn, ChatRequest
-from ..services import gemini_service, prompt_builder, rag
+from ..services import prompt_builder, rag
+from ..services.llm.router import resolve_provider_for_request
+from ..services.prompt_sanitizer import sanitize_experience_context, sanitize_prompt
 
 router = APIRouter(tags=["chat"])
 
@@ -40,7 +42,8 @@ def _sse_stream(
     attachments: list[dict],
     model_name: str | None = None,
 ) -> Iterator[bytes]:
-    for chunk in gemini_service.stream_text(prompt, attachments, model_name=model_name):
+    provider = resolve_provider_for_request(attachments=attachments)
+    for chunk in provider.stream_text(prompt, attachments, model_name=model_name):
         if not chunk:
             continue
         payload = json.dumps({"t": chunk}, ensure_ascii=False)
@@ -60,16 +63,27 @@ def build_and_stream(
     binary_file_names: list[str],
     model_name: str | None = None,
 ) -> StreamingResponse:
+    settings = get_settings()
+    skip_vector = settings.active_llm_provider == "ollama"
+
     experience_context = ""
     if mode in ("masterResume", "portfolio", "interview"):
-        query = " ".join(
-            part for part in [_latest_user_text(messages), target_job] if part
-        ).strip()
-        experience_context = rag.build_experience_context(
-            user_id=user_id,
-            query=query,
-            selected_experience_ids=selected_experience_ids,
-        )
+        if skip_vector and selected_experience_ids:
+            experience_context = rag.build_selected_experience_context(
+                user_id=user_id,
+                selected_experience_ids=selected_experience_ids,
+            )
+        else:
+            query = " ".join(
+                part for part in [_latest_user_text(messages), target_job] if part
+            ).strip()
+            experience_context = rag.build_experience_context(
+                user_id=user_id,
+                query=query,
+                selected_experience_ids=selected_experience_ids,
+                skip_vector_search=skip_vector,
+            )
+        experience_context = sanitize_experience_context(experience_context)
 
     prompt = prompt_builder.build_chat_prompt(
         mode=mode,
@@ -79,6 +93,7 @@ def build_and_stream(
         binary_file_names=binary_file_names,
         experience_context=experience_context,
     )
+    prompt = sanitize_prompt(prompt)
 
     return StreamingResponse(
         _sse_stream(prompt, attachments, model_name=model_name),
@@ -90,9 +105,19 @@ def build_and_stream(
 @router.get("/models")
 def list_models() -> dict:
     settings = get_settings()
+    if settings.active_llm_provider == "ollama":
+        models = settings.allowed_ollama_models
+        return {
+            "provider": "ollama",
+            "defaultModel": settings.ollama_model,
+            "models": models,
+            "cloudAiEnabled": settings.cloud_ai_enabled,
+        }
     return {
+        "provider": "gemini",
         "defaultModel": settings.gemini_model,
         "models": settings.allowed_gemini_models,
+        "cloudAiEnabled": settings.cloud_ai_enabled,
     }
 
 

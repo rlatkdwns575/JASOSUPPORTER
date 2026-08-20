@@ -1,0 +1,10 @@
+# Training venv: python -m venv .venv-train
+# Install from backend/: pip install -r training/requirements-train.txt
+# CUDA torch: see https://pytorch.org/get-started/locally/
+torch>=2.2
+transformers>=4.44
+peft>=0.12
+trl>=0.9
+datasets>=2.20
+accelerate>=0.33
+bitsandbytes>=0.43; platform_system != "Windows"

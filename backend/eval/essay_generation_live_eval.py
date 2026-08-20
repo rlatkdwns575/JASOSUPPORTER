@@ -1,11 +1,12 @@
-"""자소서 live eval — Gemini 실호출 + LLM-as-judge.
+"""자소서 live eval — LLM 실호출 + LLM-as-judge(Gemini).
 
-CI에는 포함하지 않는다. API Key가 없으면 skip(exit 0).
+CI에는 포함하지 않는다. provider별 사전 조건이 없으면 skip(exit 0).
 엄격 모드: --require-api-key
 
 사용:
   cd backend
   python -m eval.essay_generation_live_eval
+  python -m eval.essay_generation_live_eval --provider ollama
   python -m eval.essay_generation_live_eval --require-api-key
 """
 
@@ -24,7 +25,8 @@ sys.path.insert(0, str(ROOT))
 from app.config import get_settings  # noqa: E402
 from app.models import ChatMessageIn  # noqa: E402
 from app.services import gemini_service, prompt_builder  # noqa: E402
-from app.services.rag import build_experience_context  # noqa: E402
+from app.services.llm import get_llm_provider  # noqa: E402
+from app.services.rag import build_selected_experience_context  # noqa: E402
 from app import store  # noqa: E402
 from app.db import init_db  # noqa: E402
 from eval.essay_eval import FIXTURE_PATH, load_cases  # noqa: E402
@@ -53,7 +55,7 @@ def _index_for_question(question_id: str) -> int:
     return 0
 
 
-def generate_essay(case: dict) -> str:
+def generate_essay(case: dict, *, provider: str) -> str:
     experience = case["experience"]
     question_id = case["question_id"]
     index = _index_for_question(question_id)
@@ -64,9 +66,8 @@ def generate_essay(case: dict) -> str:
         target_job="백엔드 개발자",
         selected_experience_ids=[experience["id"]],
     )
-    experience_context = build_experience_context(
+    experience_context = build_selected_experience_context(
         user_id=USER_ID,
-        query=instruction,
         selected_experience_ids=[experience["id"]],
     )
     prompt = prompt_builder.build_chat_prompt(
@@ -77,11 +78,12 @@ def generate_essay(case: dict) -> str:
         binary_file_names=[],
         experience_context=experience_context,
     )
-    return gemini_service.generate_text(prompt).strip()
+    llm = get_llm_provider(provider)
+    return llm.generate_text(prompt).strip()
 
 
-def run_case(case: dict) -> dict:
-    essay = generate_essay(case)
+def run_case(case: dict, *, provider: str) -> dict:
+    essay = generate_essay(case, provider=provider)
     fact = check_essay_facts(case["experience"], essay)
     expansion = score_essay_expansion(
         experience=case["experience"],
@@ -114,25 +116,45 @@ def run_case(case: dict) -> dict:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Live master-essay eval with Gemini + judge")
+    parser = argparse.ArgumentParser(description="Live master-essay eval with LLM + judge")
     parser.add_argument(
         "--cases",
         default=str(FIXTURE_PATH),
         help="Path to essay eval fixture JSON",
     )
     parser.add_argument(
+        "--provider",
+        choices=["gemini", "ollama"],
+        default="gemini",
+        help="Essay generation provider (judge always uses Gemini)",
+    )
+    parser.add_argument(
         "--require-api-key",
         action="store_true",
-        help="Exit 1 when GOOGLE_API_KEY is missing",
+        help="Exit 1 when GOOGLE_API_KEY is missing (judge + gemini generation)",
     )
     args = parser.parse_args()
+
+    # live eval은 선택 경험 주입만 사용한다. Pinecone/임베딩 설정 오류 로그를 막는다.
+    os.environ["PINECONE_API_KEY"] = ""
+    os.environ["LLM_PROVIDER"] = args.provider
 
     get_settings.cache_clear()
     settings = get_settings()
     if not settings.gemini_enabled:
-        message = "GOOGLE_API_KEY not configured; skipping live essay eval."
+        message = "GOOGLE_API_KEY not configured; judge step unavailable."
         print(message)
-        return 1 if args.require_api_key else 0
+        if args.require_api_key:
+            return 1
+        if args.provider == "gemini":
+            print("Skipping live essay eval (gemini provider).")
+            return 0
+        print("Skipping live essay eval (judge requires Gemini API key).")
+        return 0
+    if args.provider == "ollama":
+        print(f"Generation provider: ollama ({settings.ollama_model})")
+    else:
+        print(f"Generation provider: gemini ({settings.gemini_model})")
 
     cases = json.loads(Path(args.cases).read_text(encoding="utf-8"))
     if not cases:
@@ -151,7 +173,7 @@ def main() -> int:
         _seed_experience(case["experience"])
         print(f"\n=== {case['id']} ===")
         try:
-            result = run_case(case)
+            result = run_case(case, provider=args.provider)
         except Exception as error:  # noqa: BLE001
             print(f"FAIL: {error}")
             results.append({"case_id": case["id"], "error": str(error)})
@@ -171,7 +193,12 @@ def main() -> int:
 
     report_path = Path(__file__).parent / "reports"
     report_path.mkdir(exist_ok=True)
-    out_file = report_path / "essay_live_eval_latest.json"
+    report_name = (
+        "essay_live_ollama_latest.json"
+        if args.provider == "ollama"
+        else "essay_live_eval_latest.json"
+    )
+    out_file = report_path / report_name
     out_file.write_text(json.dumps(results, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"\nReport: {out_file}")
     print(f"{passed}/{len(cases)} passed")

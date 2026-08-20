@@ -42,6 +42,16 @@ class GeminiModelOption {
       label: 'Gemini 3.6 Flash',
       subtitle: '서버 기본(환경 설정)',
     ),
+    GeminiModelOption(
+      id: 'jaso-coach',
+      label: 'Jaso Coach',
+      subtitle: '로컬 Ollama · QLoRA 커리어 코치',
+    ),
+    GeminiModelOption(
+      id: 'qwen2.5:7b-instruct',
+      label: 'Qwen2.5 7B Instruct',
+      subtitle: '로컬 Ollama 베이스',
+    ),
   ];
 
   static const String defaultId = 'gemini-2.5-flash';
@@ -100,10 +110,14 @@ class GeminiModelsCatalog {
   const GeminiModelsCatalog({
     required this.defaultModel,
     required this.models,
+    this.provider = 'gemini',
   });
 
   final String defaultModel;
   final List<GeminiModelOption> models;
+  final String provider;
+
+  bool get isOllama => provider == 'ollama';
 
   static const GeminiModelsCatalog fallback = GeminiModelsCatalog(
     defaultModel: GeminiModelOption.defaultId,
@@ -113,6 +127,7 @@ class GeminiModelsCatalog {
   factory GeminiModelsCatalog.fromJson(Map<String, dynamic> json) {
     final Object? defaultRaw = json['defaultModel'] ?? json['default_model'];
     final Object? modelsRaw = json['models'];
+    final String provider = json['provider']?.toString() ?? 'gemini';
     final List<String> ids = <String>[];
     if (modelsRaw is List) {
       for (final Object? item in modelsRaw) {
@@ -130,6 +145,7 @@ class GeminiModelsCatalog {
     return GeminiModelsCatalog(
       defaultModel: defaultModel,
       models: GeminiModelOption.fromIds(ids),
+      provider: provider,
     );
   }
 }

@@ -1,0 +1,15 @@
+# JasoSupporter career coach — QLoRA adapter on Qwen2.5-7B-Instruct
+# 사용:
+#   ollama pull qwen2.5:7b-instruct
+#   cd backend/training/ollama
+#   ollama create jaso-coach -f Modelfile
+
+FROM qwen2.5:7b-instruct
+
+# train_qlora.py 산출물 경로 (상대 경로)
+ADAPTER ../outputs/jaso-coach-lora
+
+PARAMETER temperature 0.7
+PARAMETER num_ctx 4096
+
+SYSTEM """너는 취업 준비생을 돕는 '마스터 자소서' 코치다. 사용자가 제공한 Experience 사실만 근거로 문항별 초안·첨삭을 제안한다. 없는 경험·수치·성과·기관을 만들지 말고, 부족하면 질문한다. STAR 사실은 고정하고, 강점·인사이트·두괄식 전개는 면접에서 방어 가능한 범위에서 확장한다."""

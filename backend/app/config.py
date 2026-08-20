@@ -15,6 +15,14 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
+    # LLM provider
+    llm_provider: str = "gemini"  # gemini | ollama
+    cloud_ai_enabled: bool = True
+    ollama_base_url: str = "http://127.0.0.1:11434"
+    ollama_model: str = "jaso-coach"
+    ollama_allowed_models: str = "jaso-coach,qwen2.5:7b-instruct"
+    ollama_timeout_sec: int = 120
+
     # Gemini
     google_api_key: str = ""
     gemini_model: str = "gemini-2.5-flash"
@@ -59,6 +67,33 @@ class Settings(BaseSettings):
     @property
     def gemini_enabled(self) -> bool:
         return bool(self.google_api_key.strip())
+
+    @property
+    def ollama_enabled(self) -> bool:
+        return self.llm_provider.strip().lower() == "ollama"
+
+    @property
+    def allowed_ollama_models(self) -> list[str]:
+        models = [
+            item.strip()
+            for item in self.ollama_allowed_models.split(",")
+            if item.strip()
+        ]
+        default = self.ollama_model.strip()
+        if default and default not in models:
+            models.insert(0, default)
+        return models
+
+    def resolve_ollama_model(self, requested: str | None) -> str:
+        candidate = (requested or "").strip()
+        allowed = self.allowed_ollama_models
+        if candidate and candidate in allowed:
+            return candidate
+        return self.ollama_model
+
+    @property
+    def active_llm_provider(self) -> str:
+        return self.llm_provider.strip().lower() or "gemini"
 
     @property
     def allowed_gemini_models(self) -> list[str]:

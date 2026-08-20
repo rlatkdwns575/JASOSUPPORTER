@@ -12,6 +12,10 @@ void main() {
       'embeddingModel': 'models/text-embedding-004',
       'embeddingDimension': 512,
       'genaiSdk': 'google-genai',
+      'llmProvider': 'ollama',
+      'ollamaConfigured': true,
+      'cloudAiEnabled': false,
+      'localModel': 'jaso-coach',
     });
 
     expect(health.isOk, isTrue);
@@ -21,6 +25,9 @@ void main() {
     expect(health.statusLabel, '연결됨 (Pinecone 차원 불일치)');
     expect(health.embeddingLabel, contains('512'));
     expect(health.authRequiredLabel, 'Soft ID 허용');
+    expect(health.isLocalLlm, isTrue);
+    expect(health.llmProviderLabel, contains('Ollama'));
+    expect(health.cloudAiLabel, contains('외부 AI 미전송'));
   });
 
   test('BackendHealth authRequiredLabel reflects server mode', () {

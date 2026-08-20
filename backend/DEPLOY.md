@@ -6,12 +6,32 @@ FastAPI 백엔드를 프로덕션에 올릴 때 확인할 항목입니다.
 
 | 변수 | 프로덕션 권장 |
 |------|----------------|
-| `GOOGLE_API_KEY` | Gemini 생성·임베딩용 실키 |
+| `LLM_PROVIDER` | `ollama`(로컬) 또는 `gemini`(클라우드) |
+| `GOOGLE_API_KEY` | Gemini 생성·임베딩·judge용 (`LLM_PROVIDER=gemini` 또는 폴백) |
 | `JWT_SECRET` | 32자 이상 랜덤 문자열 (기본값 금지) |
 | `AUTH_REQUIRED` | `true` |
 | `DATABASE_URL` | `postgresql+psycopg://...` |
 | `CORS_ORIGINS` | 실제 웹/앱 도메인 (쉼표 구분, `*` 금지) |
 | `EMBEDDING_DIMENSION` | Pinecone 인덱스 차원과 **동일** |
+
+## 로컬 LLM (Ollama)
+
+| 변수 | 설명 |
+|------|------|
+| `LLM_PROVIDER=ollama` | 로컬 GPU 추론 (Google API 미호출) |
+| `OLLAMA_BASE_URL` | 기본 `http://127.0.0.1:11434` |
+| `OLLAMA_MODEL` | 예: `jaso-coach` |
+| `CLOUD_AI_ENABLED` | `false`면 Gemini 폴백 차단 |
+
+배포 순서:
+
+```bash
+ollama pull qwen2.5:7b-instruct
+cd backend/training/ollama
+ollama create jaso-coach -f Modelfile
+```
+
+학습·adapter는 `backend/training/README.md` 참고.
 
 ## 선택
 
@@ -39,6 +59,7 @@ curl http://localhost:8000/health
 
 확인 필드:
 
+- `llmProvider` / `ollamaConfigured` / `cloudAiEnabled` / `localModel`: LLM 경로
 - `gemini`: API 키 설정 여부
 - `pinecone` / `pineconeDimensionMismatch`: 벡터 DB 상태
 - `authRequired`: JWT 필수 여부

@@ -9,7 +9,7 @@
 | `python -m eval.generation_eval` | 수치·기관 hallucination 휴리스틱 | O |
 | `python -m eval.essay_eval` | 자소서 사실성 + 의미 확장 fixture eval | O |
 | `python -m eval.rag_eval` | RAG hit@k (로컬 DB) | X (수동) |
-| `python -m eval.essay_generation_live_eval` | Gemini 실호출 + LLM-as-judge | X (수동) |
+| `python -m eval.essay_generation_live_eval` | LLM 실호출 + LLM-as-judge | X (수동) |
 
 ## 2계층 평가 모델
 
@@ -54,24 +54,29 @@ Fixture: [`fixtures/essay_eval_cases.json`](fixtures/essay_eval_cases.json)
 cd backend
 $env:GOOGLE_API_KEY="your-key"
 python -m eval.essay_generation_live_eval
+python -m eval.essay_generation_live_eval --provider ollama
 ```
 
 옵션:
 
+- `--provider gemini|ollama`: 초안 생성 provider (judge는 Gemini)
 - `--require-api-key`: Key 없으면 exit 1
 - `--cases path/to/fixtures.json`
 
 흐름:
 
 1. fixture Experience를 임시 SQLite에 seed
-2. `prompt_builder` + RAG 컨텍스트로 Gemini 초안 생성
+2. `prompt_builder` + 선택 경험 컨텍스트로 LLM 초안 생성
 3. 오프라인 fact/expansion 검사
 4. LLM-as-judge ([`essay_judge.py`](essay_judge.py)) 2축 채점
    - fact_fidelity (1~5) >= 4
    - meaning_expansion (1~5) >= 3
    - summary_only == false
 
-결과: [`reports/essay_live_eval_latest.json`](reports/essay_live_eval_latest.json)
+결과:
+
+- Gemini: [`reports/essay_live_eval_latest.json`](reports/essay_live_eval_latest.json)
+- Ollama: [`reports/essay_live_ollama_latest.json`](reports/essay_live_ollama_latest.json)
 
 ## 프롬프트 정책
 
@@ -85,5 +90,6 @@ python -m eval.essay_generation_live_eval
 
 ## 주의
 
+- live eval: **선택 경험 주입만** 사용 (Pinecone/임베딩 비활성). `.env`의 잘못된 Pinecone 키가 있어도 eval 시작 시 무시한다.
 - expansion scorer는 proxy metric이다. live judge 결과와 주기적으로 calibration한다.
 - `reports/`는 gitignore 대상으로 두는 것을 권장한다 (로컬 baseline용).

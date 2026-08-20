@@ -20,15 +20,17 @@ void main() {
   });
 
   group('GeminiModelsCatalog', () {
-    test('fromJson includes default model', () {
+    test('fromJson includes default model and provider', () {
       final GeminiModelsCatalog catalog = GeminiModelsCatalog.fromJson({
-        'defaultModel': 'gemini-3.6-flash',
-        'models': ['gemini-2.5-flash', 'gemini-2.5-pro'],
+        'provider': 'ollama',
+        'defaultModel': 'jaso-coach',
+        'models': ['jaso-coach', 'qwen2.5:7b-instruct'],
       });
-      expect(catalog.defaultModel, 'gemini-3.6-flash');
+      expect(catalog.defaultModel, 'jaso-coach');
+      expect(catalog.isOllama, isTrue);
       expect(
         catalog.models.map((GeminiModelOption o) => o.id),
-        contains('gemini-3.6-flash'),
+        contains('jaso-coach'),
       );
     });
   });

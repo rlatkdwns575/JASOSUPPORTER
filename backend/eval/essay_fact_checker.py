@@ -8,7 +8,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-from eval.generation_eval import extract_numbers, has_unmentioned_company
+from eval.generation_eval import extract_metric_numbers, has_unmentioned_company
 
 # generation_eval 과 동일한 패턴 재사용
 _NUMBER = re.compile(r"\d+(?:\.\d+)?%?")
@@ -79,7 +79,7 @@ def check_essay_facts(experience: dict, response: str) -> FactCheckResult:
     facts = experience_facts_text(experience)
     violations: list[str] = []
 
-    bad_numbers = extract_numbers(response) - extract_numbers(facts)
+    bad_numbers = extract_metric_numbers(response) - extract_metric_numbers(facts)
     if bad_numbers:
         violations.append(f"허용되지 않은 수치: {', '.join(sorted(bad_numbers))}")
 

@@ -273,6 +273,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         children: [
                           _InfoRow(label: '서버 상태', value: data.statusLabel),
                           const Divider(height: 22, color: AppColors.outlineVariant),
+                          _InfoRow(label: 'AI 제공', value: data.llmProviderLabel),
+                          const Divider(height: 22, color: AppColors.outlineVariant),
+                          _InfoRow(label: '클라우드 AI', value: data.cloudAiLabel),
+                          const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(label: 'Gemini', value: data.geminiLabel),
                           const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(label: 'Pinecone', value: data.pineconeLabel),
@@ -359,7 +363,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 10),
                     Text(
                       '벡터DB에는 Experience 요약·역할·스킬·성과 메타를 올립니다. '
-                      'AI는 선택한 경험과 검색된 경험만 근거로 답합니다.'.softWrapWords(),
+                      'AI는 선택한 경험과 검색된 경험만 근거로 답합니다. '
+                      'LLM_PROVIDER=ollama 이면 로컬 GPU 추론으로 Google API에 프롬프트가 전송되지 않습니다.'
+                          .softWrapWords(),
                       style: const TextStyle(fontSize: 13, height: 1.45, color: AppColors.onSurface),
                     ),
                   ],

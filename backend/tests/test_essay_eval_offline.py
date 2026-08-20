@@ -32,6 +32,15 @@ def test_fact_checker_accepts_faithful_response() -> None:
     assert result.passed
 
 
+def test_fact_checker_ignores_char_count_and_star_noise() -> None:
+    result = check_essay_facts(
+        EXPERIENCE,
+        "STAR 구조로 작성했습니다. 공백 포함 588자 분량으로, 500~700자 범위에 맞췄습니다. "
+        "재시도 로직을 추가해 실패율을 12%에서 3%로 낮췄습니다.",
+    )
+    assert result.passed
+
+
 def test_expansion_scorer_prefers_interpretation_over_summary() -> None:
     expanded = score_essay_expansion(
         experience=EXPERIENCE,

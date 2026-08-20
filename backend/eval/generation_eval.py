@@ -14,7 +14,29 @@ from dataclasses import dataclass
 
 
 _NUMBER = re.compile(r"\d+(?:\.\d+)?%?")
-_COMPANYISH = re.compile(r"(?:주식회사|㈜)?\s*[A-Z][A-Za-z0-9]{2,}(?:\s*(?:Inc|Corp|Ltd)\.?)?")
+_COMPANYISH = re.compile(
+    r"(?:주식회사|㈜)\s*[A-Za-z0-9가-힣]+"
+    r"|[A-Z][A-Za-z0-9]{2,}\s+(?:Inc|Corp|Ltd)\.?"
+    r"|[A-Z][A-Za-z0-9]{2,}(?:Inc|Corp|Ltd)\.?"
+)
+_NON_COMPANY_TOKENS = frozenset(
+    {
+        "STAR",
+        "API",
+        "PM",
+        "QA",
+        "UI",
+        "UX",
+        "HR",
+        "IT",
+        "SDK",
+        "JWT",
+        "RAG",
+        "SSE",
+        "CRUD",
+        "FastAPI",
+    }
+)
 
 
 @dataclass
@@ -51,19 +73,54 @@ def extract_numbers(text: str) -> set[str]:
     return set(_NUMBER.findall(text))
 
 
+def _strip_essay_noise(text: str) -> str:
+    """글자 수·문항 번호 등 성과 수치가 아닌 숫자 문맥을 제거한다."""
+    cleaned = text
+    cleaned = re.sub(r"Q[1-6]", " ", cleaned)
+    cleaned = re.sub(r"\d{2,4}\s*~\s*\d{2,4}\s*자", " ", cleaned)
+    cleaned = re.sub(r"\d{2,4}\s*자\b", " ", cleaned)
+    cleaned = re.sub(r"약\s*\d{2,4}\s*자", " ", cleaned)
+    cleaned = re.sub(r"\(\s*\d{2,4}\s*~\s*\d{2,4}\s*자[^)]*\)", " ", cleaned)
+    return cleaned
+
+
+def extract_metric_numbers(text: str) -> set[str]:
+    """자소서 본문에서 성과·지표로 볼 수 있는 수치만 추출한다."""
+    numbers = extract_numbers(_strip_essay_noise(text))
+    metrics: set[str] = set()
+    for number in numbers:
+        if number.endswith("%"):
+            metrics.add(number)
+            continue
+        if not number.isdigit():
+            metrics.add(number)
+            continue
+        value = int(number)
+        if value <= 9:
+            continue
+        if 400 <= value <= 900:
+            continue
+        metrics.add(number)
+    return metrics
+
+
 def hallucinated_numbers(facts: str, response: str) -> set[str]:
-    allowed = extract_numbers(facts)
-    used = extract_numbers(response)
+    allowed = extract_metric_numbers(facts)
+    used = extract_metric_numbers(response)
     return used - allowed
 
 
 def has_unmentioned_company(facts: str, response: str) -> bool:
+    facts_lower = facts.lower()
     for match in _COMPANYISH.findall(response):
         token = match.strip()
-        if token and token.lower() not in facts.lower():
-            # 영문 대문자 시작 토큰만 검사
-            if re.search(r"[A-Z]", token):
-                return True
+        if not token:
+            continue
+        if token.upper() in _NON_COMPANY_TOKENS:
+            continue
+        if token.lower() in facts_lower:
+            continue
+        return True
     return False
 
 

@@ -10,6 +10,10 @@ class BackendHealth {
     this.embeddingModel,
     this.embeddingDimension,
     this.genaiSdk,
+    this.llmProvider = 'gemini',
+    this.ollamaConfigured = false,
+    this.cloudAiEnabled = true,
+    this.localModel,
   });
 
   final String status;
@@ -21,8 +25,14 @@ class BackendHealth {
   final String? embeddingModel;
   final int? embeddingDimension;
   final String? genaiSdk;
+  final String llmProvider;
+  final bool ollamaConfigured;
+  final bool cloudAiEnabled;
+  final String? localModel;
 
   bool get isOk => status == 'ok';
+
+  bool get isLocalLlm => llmProvider == 'ollama';
 
   factory BackendHealth.fromJson(Map<String, dynamic> json) {
     return BackendHealth(
@@ -35,6 +45,10 @@ class BackendHealth {
       embeddingModel: json['embeddingModel']?.toString(),
       embeddingDimension: _readInt(json['embeddingDimension']),
       genaiSdk: json['genaiSdk']?.toString(),
+      llmProvider: json['llmProvider']?.toString() ?? 'gemini',
+      ollamaConfigured: json['ollamaConfigured'] == true,
+      cloudAiEnabled: json['cloudAiEnabled'] != false,
+      localModel: json['localModel']?.toString(),
     );
   }
 
@@ -74,4 +88,25 @@ class BackendHealth {
   }
 
   String get authRequiredLabel => authRequired ? 'JWT 필수' : 'Soft ID 허용';
+
+  String get llmProviderLabel {
+    if (isLocalLlm) {
+      final String model = localModel ?? 'jaso-coach';
+      return '로컬 (Ollama · $model)';
+    }
+    return '클라우드 (Gemini)';
+  }
+
+  String get cloudAiLabel {
+    if (isLocalLlm && !cloudAiEnabled) {
+      return '비활성 — 외부 AI 미전송';
+    }
+    if (cloudAiEnabled && geminiEnabled) {
+      return '활성 — 첨부·폴백 시 Gemini';
+    }
+    if (!cloudAiEnabled) {
+      return '비활성';
+    }
+    return '키 없음';
+  }
 }

@@ -68,4 +68,8 @@ def health() -> dict:
         "embeddingModel": _settings.embedding_model,
         "embeddingDimension": _settings.embedding_dimension,
         "genaiSdk": "google-genai",
+        "llmProvider": _settings.active_llm_provider,
+        "ollamaConfigured": _settings.active_llm_provider == "ollama",
+        "cloudAiEnabled": _settings.cloud_ai_enabled,
+        "localModel": _settings.ollama_model if _settings.active_llm_provider == "ollama" else None,
     }

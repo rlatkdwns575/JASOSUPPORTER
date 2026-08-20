@@ -40,6 +40,18 @@ def test_health(client: TestClient) -> None:
     assert "embeddingDimension" in body
     assert "pineconeDimensionMismatch" in body
     assert isinstance(body["jwtSecretConfigured"], bool)
+    assert "llmProvider" in body
+    assert "ollamaConfigured" in body
+    assert "cloudAiEnabled" in body
+
+
+def test_models_endpoint(client: TestClient) -> None:
+    response = client.get("/models")
+    assert response.status_code == 200
+    body = response.json()
+    assert "defaultModel" in body
+    assert isinstance(body["models"], list)
+    assert body.get("provider") in ("gemini", "ollama", None)
 
 
 def test_experience_roundtrip(client: TestClient, user_headers: dict[str, str]) -> None:
