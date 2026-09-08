@@ -41,32 +41,6 @@ class Experience(CamelModel):
     created_at: str = ""
     updated_at: str = ""
 
-    def embedding_text(self) -> str:
-        """Pinecone 임베딩과 컨텍스트 주입에 쓰는 사실 텍스트."""
-        parts: list[str] = []
-        if self.title.strip():
-            parts.append(f"제목: {self.title.strip()}")
-        parts.append(f"유형: {self.type}")
-        if self.organization.strip():
-            parts.append(f"기관/소속: {self.organization.strip()}")
-        if self.role.strip():
-            parts.append(f"역할: {self.role.strip()}")
-        if self.situation.strip():
-            parts.append(f"상황: {self.situation.strip()}")
-        if self.task.strip():
-            parts.append(f"과제: {self.task.strip()}")
-        if self.action.strip():
-            parts.append(f"행동: {self.action.strip()}")
-        if self.result.strip():
-            parts.append(f"성과: {self.result.strip()}")
-        if self.learned.strip():
-            parts.append(f"배운 점: {self.learned.strip()}")
-        if self.tech_stacks:
-            parts.append("기술 스택: " + ", ".join(self.tech_stacks))
-        if self.competency_tags:
-            parts.append("역량 태그: " + ", ".join(self.competency_tags))
-        return "\n".join(parts).strip()
-
 
 class ChatMessageIn(CamelModel):
     role: str = "user"  # "user" | "assistant"
@@ -86,7 +60,7 @@ class ChatRequest(CamelModel):
     target_job: str = ""
     selected_experience_ids: list[str] = []
     attachments: list[ChatAttachment] = []
-    # 선택 Gemini 모델. 비어 있거나 허용 목록 밖이면 서버 기본값 사용.
+    # 선택 Ollama 모델. 비어 있거나 허용 목록 밖이면 서버 기본값 사용.
     model: str = ""
 
 

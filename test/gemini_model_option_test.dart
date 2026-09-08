@@ -5,16 +5,16 @@ void main() {
   group('GeminiModelOption', () {
     test('fromIds merges known metadata and unknown ids', () {
       final List<GeminiModelOption> options = GeminiModelOption.fromIds([
-        'gemini-2.5-flash',
-        'gemini-3.6-flash',
+        'jaso-coach',
+        'qwen3:1.7b',
         'custom-model-x',
       ]);
       expect(options.map((GeminiModelOption o) => o.id), [
-        'gemini-2.5-flash',
-        'gemini-3.6-flash',
+        'jaso-coach',
+        'qwen3:1.7b',
         'custom-model-x',
       ]);
-      expect(options.first.label, 'Gemini 2.5 Flash');
+      expect(options.first.label, 'Jaso Coach');
       expect(options.last.label, contains('Custom'));
     });
   });
@@ -24,7 +24,7 @@ void main() {
       final GeminiModelsCatalog catalog = GeminiModelsCatalog.fromJson({
         'provider': 'ollama',
         'defaultModel': 'jaso-coach',
-        'models': ['jaso-coach', 'qwen2.5:7b-instruct'],
+        'models': ['jaso-coach', 'qwen3:1.7b'],
       });
       expect(catalog.defaultModel, 'jaso-coach');
       expect(catalog.isOllama, isTrue);

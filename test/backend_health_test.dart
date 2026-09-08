@@ -5,13 +5,9 @@ void main() {
   test('BackendHealth.fromJson parses health payload', () {
     final BackendHealth health = BackendHealth.fromJson(<String, dynamic>{
       'status': 'ok',
-      'gemini': true,
-      'pinecone': false,
+      'gemini': false,
       'authRequired': false,
-      'pineconeDimensionMismatch': true,
-      'embeddingModel': 'models/text-embedding-004',
-      'embeddingDimension': 512,
-      'genaiSdk': 'google-genai',
+      'genaiSdk': null,
       'llmProvider': 'ollama',
       'ollamaConfigured': true,
       'cloudAiEnabled': false,
@@ -19,24 +15,21 @@ void main() {
     });
 
     expect(health.isOk, isTrue);
-    expect(health.geminiEnabled, isTrue);
-    expect(health.pineconeDimensionMismatch, isTrue);
-    expect(health.embeddingDimension, 512);
-    expect(health.statusLabel, '연결됨 (Pinecone 차원 불일치)');
-    expect(health.embeddingLabel, contains('512'));
+    expect(health.geminiEnabled, isFalse);
+    expect(health.statusLabel, '정상');
     expect(health.authRequiredLabel, 'Soft ID 허용');
     expect(health.isLocalLlm, isTrue);
     expect(health.llmProviderLabel, contains('Ollama'));
-    expect(health.cloudAiLabel, contains('외부 AI 미전송'));
+    expect(health.cloudAiLabel, contains('로컬 Ollama'));
   });
 
   test('BackendHealth authRequiredLabel reflects server mode', () {
     final BackendHealth strict = BackendHealth.fromJson(<String, dynamic>{
       'status': 'ok',
-      'gemini': true,
-      'pinecone': true,
+      'gemini': false,
       'authRequired': true,
-      'pineconeDimensionMismatch': false,
+      'llmProvider': 'ollama',
+      'ollamaConfigured': true,
     });
     expect(strict.authRequiredLabel, 'JWT 필수');
   });
