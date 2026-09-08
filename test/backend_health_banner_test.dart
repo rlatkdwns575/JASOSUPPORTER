@@ -10,30 +10,17 @@ void main() {
     );
   });
 
-  test('backendHealthBannerMessage warns on pinecone dimension mismatch', () {
-    final String? message = backendHealthBannerMessage(
-      health: const BackendHealth(
-        status: 'ok',
-        geminiEnabled: true,
-        pineconeEnabled: false,
-        authRequired: false,
-        pineconeDimensionMismatch: true,
-      ),
-    );
-    expect(message, contains('Pinecone'));
-  });
-
-  test('backendHealthBannerMessage warns when gemini disabled', () {
+  test('backendHealthBannerMessage warns when ollama not ready', () {
     final String? message = backendHealthBannerMessage(
       health: const BackendHealth(
         status: 'ok',
         geminiEnabled: false,
-        pineconeEnabled: true,
         authRequired: false,
-        pineconeDimensionMismatch: false,
+        llmProvider: 'none',
+        ollamaConfigured: false,
       ),
     );
-    expect(message, contains('Gemini'));
+    expect(message, contains('Ollama'));
   });
 
   test('backendHealthBannerMessage warns when auth required but logged out', () {
@@ -41,10 +28,10 @@ void main() {
       backendHealthBannerMessage(
         health: const BackendHealth(
           status: 'ok',
-          geminiEnabled: true,
-          pineconeEnabled: true,
+          geminiEnabled: false,
           authRequired: true,
-          pineconeDimensionMismatch: false,
+          llmProvider: 'ollama',
+          ollamaConfigured: true,
         ),
         isLoggedIn: false,
       ),
@@ -57,11 +44,11 @@ void main() {
       backendHealthBannerMessage(
         health: const BackendHealth(
           status: 'ok',
-          geminiEnabled: true,
-          pineconeEnabled: true,
+          geminiEnabled: false,
           authRequired: false,
-          pineconeDimensionMismatch: false,
           jwtSecretConfigured: false,
+          llmProvider: 'ollama',
+          ollamaConfigured: true,
         ),
       ),
       contains('JWT_SECRET'),
@@ -73,11 +60,12 @@ void main() {
       backendHealthBannerMessage(
         health: const BackendHealth(
           status: 'ok',
-          geminiEnabled: true,
-          pineconeEnabled: true,
+          geminiEnabled: false,
           authRequired: false,
-          pineconeDimensionMismatch: false,
           jwtSecretConfigured: true,
+          llmProvider: 'ollama',
+          ollamaConfigured: true,
+          localModel: 'jaso-coach',
         ),
       ),
       isNull,

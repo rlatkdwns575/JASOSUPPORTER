@@ -31,7 +31,7 @@ class OllamaProvider:
         if attachments:
             yield (
                 "[로컬 AI] Ollama 모델은 텍스트만 지원합니다. "
-                "첨부 파일이 있으면 CLOUD_AI_ENABLED=true 및 Gemini로 전환하세요."
+                "첨부 대신 경험 카드·텍스트로 요청해 주세요."
             )
             return
 

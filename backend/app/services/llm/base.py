@@ -10,7 +10,7 @@ class LlmProvider(Protocol):
 
     @property
     def provider_id(self) -> str:
-        """gemini | ollama"""
+        """ollama"""
 
     def stream_text(
         self,

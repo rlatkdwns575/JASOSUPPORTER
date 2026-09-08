@@ -10,7 +10,6 @@ from .db import init_db
 from .logging_config import get_logger, setup_logging
 from .middleware_observability import ObservabilityMiddleware
 from .routers import auth, career, chat, chat_rooms, essay, experiences
-from .services import pinecone_service
 
 
 @asynccontextmanager
@@ -19,12 +18,9 @@ async def lifespan(app: FastAPI):
     setup_logging(settings.log_level)
     logger = get_logger(__name__)
     logger.info(
-        "startup gemini=%s pinecone=%s auth_required=%s embedding_model=%s embedding_dim=%s",
-        settings.gemini_enabled,
-        settings.pinecone_enabled,
+        "startup llm=ollama model=%s auth_required=%s",
+        settings.ollama_model,
         settings.auth_required,
-        settings.embedding_model,
-        settings.embedding_dimension,
     )
     if settings.auth_required and settings.jwt_secret_is_default:
         logger.warning(
@@ -36,7 +32,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="JasoSupporter API", version="1.1.0", lifespan=lifespan)
+app = FastAPI(title="JasoSupporter API", version="1.2.0", lifespan=lifespan)
 
 _settings = get_settings()
 app.add_middleware(ObservabilityMiddleware)
@@ -60,16 +56,12 @@ app.include_router(essay.router)
 def health() -> dict:
     return {
         "status": "ok",
-        "gemini": _settings.gemini_enabled,
-        "pinecone": _settings.pinecone_enabled,
-        "pineconeDimensionMismatch": pinecone_service.dimension_mismatch(),
+        "gemini": False,
         "authRequired": _settings.auth_required,
         "jwtSecretConfigured": not _settings.jwt_secret_is_default,
-        "embeddingModel": _settings.embedding_model,
-        "embeddingDimension": _settings.embedding_dimension,
-        "genaiSdk": "google-genai",
-        "llmProvider": _settings.active_llm_provider,
-        "ollamaConfigured": _settings.active_llm_provider == "ollama",
-        "cloudAiEnabled": _settings.cloud_ai_enabled,
-        "localModel": _settings.ollama_model if _settings.active_llm_provider == "ollama" else None,
+        "genaiSdk": None,
+        "llmProvider": "ollama",
+        "ollamaConfigured": True,
+        "cloudAiEnabled": False,
+        "localModel": _settings.ollama_model,
     }

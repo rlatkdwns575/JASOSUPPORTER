@@ -89,12 +89,8 @@ String? backendHealthBannerMessage({
   if (!health.jwtSecretConfigured) {
     return 'JWT_SECRET이 기본값입니다. 프로덕션 배포 전 backend/.env 를 변경하세요.';
   }
-  if (health.pineconeDimensionMismatch) {
-    return 'Pinecone 인덱스 차원과 EMBEDDING_DIMENSION이 일치하지 않습니다. '
-        'RAG가 로컬 폴백으로 동작합니다.';
-  }
-  if (!health.geminiEnabled) {
-    return 'Gemini API 키가 설정되지 않았습니다. AI 생성 기능을 사용할 수 없습니다.';
+  if (!health.isLocalLlm || !health.ollamaConfigured) {
+    return '로컬 Ollama(jaso-coach)가 준비되지 않았습니다. ollama serve 후 모델을 확인하세요.';
   }
   return null;
 }

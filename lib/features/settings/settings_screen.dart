@@ -275,32 +275,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(label: 'AI 제공', value: data.llmProviderLabel),
                           const Divider(height: 22, color: AppColors.outlineVariant),
-                          _InfoRow(label: '클라우드 AI', value: data.cloudAiLabel),
-                          const Divider(height: 22, color: AppColors.outlineVariant),
-                          _InfoRow(label: 'Gemini', value: data.geminiLabel),
-                          const Divider(height: 22, color: AppColors.outlineVariant),
-                          _InfoRow(label: 'Pinecone', value: data.pineconeLabel),
+                          _InfoRow(label: '로컬 모델', value: data.localModel ?? 'jaso-coach'),
                           const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(label: '서버 인증', value: data.authRequiredLabel),
-                          const Divider(height: 22, color: AppColors.outlineVariant),
-                          _InfoRow(label: '임베딩', value: data.embeddingLabel),
                           const Divider(height: 22, color: AppColors.outlineVariant),
                           _InfoRow(
                             label: 'JWT Secret',
                             value: data.jwtSecretConfigured ? '설정됨' : '기본값 (변경 필요)',
                           ),
-                          if (data.pineconeDimensionMismatch) ...[
-                            const SizedBox(height: 10),
-                            Text(
-                              'Pinecone 인덱스 차원과 EMBEDDING_DIMENSION이 일치하지 않습니다. '
-                              'backend/.env 값을 인덱스 차원에 맞추거나 인덱스를 재생성하세요.'.softWrapWords(),
-                              style: const TextStyle(
-                                fontSize: 12.5,
-                                color: AppColors.error,
-                                height: 1.45,
-                              ),
-                            ),
-                          ],
                         ],
                       ),
                     ),
@@ -355,17 +337,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SectionHeader(
-                      title: '개인정보·RAG',
+                      title: '개인정보·경험 컨텍스트',
                       icon: Icons.privacy_tip_outlined,
                       accent: AppColors.coaching,
                       accentTint: AppColors.surface,
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      '벡터DB에는 Experience 요약·역할·스킬·성과 메타를 올립니다. '
-                      'AI는 선택한 경험과 검색된 경험만 근거로 답합니다. '
-                      'LLM_PROVIDER=ollama 이면 로컬 GPU 추론으로 Google API에 프롬프트가 전송되지 않습니다.'
-                          .softWrapWords(),
+                      'AI는 사용자가 선택한 Experience 카드(또는 미선택 시 최근 경험)의 '
+                      '사실만 근거로 답합니다. 외부 벡터DB에 경력을 올리지 않으며, '
+                      '로컬 Ollama로 추론합니다.'.softWrapWords(),
                       style: const TextStyle(fontSize: 13, height: 1.45, color: AppColors.onSurface),
                     ),
                   ],

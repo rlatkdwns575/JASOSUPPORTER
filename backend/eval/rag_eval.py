@@ -5,7 +5,7 @@
   python -m eval.rag_eval
 
 경험 픽스처를 임시 DB에 넣고 gold query 대비 hit@k / recall@k 를 출력한다.
-실제 Pinecone 없이도 로컬 폴백 경로를 평가할 수 있다.
+로컬 최근 경험 폴백 경로를 평가한다 (벡터 검색 없음).
 """
 
 from __future__ import annotations

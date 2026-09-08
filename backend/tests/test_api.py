@@ -34,15 +34,12 @@ def test_health(client: TestClient) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
-    assert "gemini" in body
-    assert "pinecone" in body
-    assert body["genaiSdk"] == "google-genai"
-    assert "embeddingDimension" in body
-    assert "pineconeDimensionMismatch" in body
+    assert body.get("llmProvider") == "ollama"
+    assert body.get("ollamaConfigured") is True
+    assert body.get("cloudAiEnabled") is False
+    assert body.get("genaiSdk") is None
+    assert "pinecone" not in body
     assert isinstance(body["jwtSecretConfigured"], bool)
-    assert "llmProvider" in body
-    assert "ollamaConfigured" in body
-    assert "cloudAiEnabled" in body
 
 
 def test_models_endpoint(client: TestClient) -> None:
@@ -51,7 +48,8 @@ def test_models_endpoint(client: TestClient) -> None:
     body = response.json()
     assert "defaultModel" in body
     assert isinstance(body["models"], list)
-    assert body.get("provider") in ("gemini", "ollama", None)
+    assert body.get("provider") == "ollama"
+    assert "jaso-coach" in body.get("defaultModel", "") or body.get("defaultModel")
 
 
 def test_experience_roundtrip(client: TestClient, user_headers: dict[str, str]) -> None:

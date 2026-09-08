@@ -1,4 +1,4 @@
-"""RAG 채팅 엔드포인트. 서버에서 시스템 프롬프트 + RAG 컨텍스트를 조립해 LLM 스트리밍을 SSE 로 중계한다."""
+"""채팅 엔드포인트. 시스템 프롬프트 + 경험 컨텍스트 → Ollama SSE."""
 
 import base64
 import json
@@ -63,12 +63,9 @@ def build_and_stream(
     binary_file_names: list[str],
     model_name: str | None = None,
 ) -> StreamingResponse:
-    settings = get_settings()
-    skip_vector = settings.active_llm_provider == "ollama"
-
     experience_context = ""
     if mode in ("masterResume", "portfolio", "interview"):
-        if skip_vector and selected_experience_ids:
+        if selected_experience_ids:
             experience_context = rag.build_selected_experience_context(
                 user_id=user_id,
                 selected_experience_ids=selected_experience_ids,
@@ -81,7 +78,6 @@ def build_and_stream(
                 user_id=user_id,
                 query=query,
                 selected_experience_ids=selected_experience_ids,
-                skip_vector_search=skip_vector,
             )
         experience_context = sanitize_experience_context(experience_context)
 
@@ -105,19 +101,11 @@ def build_and_stream(
 @router.get("/models")
 def list_models() -> dict:
     settings = get_settings()
-    if settings.active_llm_provider == "ollama":
-        models = settings.allowed_ollama_models
-        return {
-            "provider": "ollama",
-            "defaultModel": settings.ollama_model,
-            "models": models,
-            "cloudAiEnabled": settings.cloud_ai_enabled,
-        }
     return {
-        "provider": "gemini",
-        "defaultModel": settings.gemini_model,
-        "models": settings.allowed_gemini_models,
-        "cloudAiEnabled": settings.cloud_ai_enabled,
+        "provider": "ollama",
+        "defaultModel": settings.ollama_model,
+        "models": settings.allowed_ollama_models,
+        "cloudAiEnabled": False,
     }
 
 
